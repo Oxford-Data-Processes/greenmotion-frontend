@@ -100,7 +100,7 @@ def process_data(selected_date, selected_hour):
             "data_availability": data_availability,
         }
 
-    df_combined = combine_dataframes(dataframes)
+    df_combined = combine_dataframes_custom(dataframes)
     return {"data": df_combined, "data_availability": data_availability}
 
 
@@ -132,7 +132,7 @@ def process_data_by_source(df, car_groups, source):
     return df
 
 
-def combine_dataframes(dataframes):
+def combine_dataframes_custom(dataframes):
     df_combined = pd.concat(dataframes, ignore_index=True)
     df_combined = clean_combined_data(df_combined)
     df_combined = reorder_columns(df_combined)
