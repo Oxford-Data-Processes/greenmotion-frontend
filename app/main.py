@@ -35,13 +35,13 @@ from utils.data_utils import (
 )
 from ui import display_results, display_results_custom, display_top_vehicles_per_group
 
-if st.secrets["aws"]["stage"] == "prod":
+if st.secrets["aws_credentials"]["STAGE"] == "prod":
     role = "ProdAdminRole"
 else:
     role = "DevAdminRole"
 
 access_key_id, secret_access_key, session_token = get_credentials(
-    st.secrets["aws"]["account_id"], role
+    st.secrets["aws_credentials"]["AWS_ACCOUNT_ID"], role
 )
 
 os.environ["AWS_ACCESS_KEY_ID"] = access_key_id
@@ -52,7 +52,7 @@ os.environ["AWS_SESSION_TOKEN"] = session_token
 st.set_page_config(page_icon="💰", page_title="Greenmotion Manchester", layout="wide")
 
 # Constants
-aws_account_id = st.secrets["aws"]["account_id"]
+aws_account_id = st.secrets["aws_credentials"]["AWS_ACCOUNT_ID"]
 CAR_GROUPS_S3_PATH = (
     f"s3://greenmotion-bucket-{aws_account_id}/car_groups/car_groups.csv"
 )
@@ -470,7 +470,7 @@ def main():
                         )
 
                         # Get SQS messages
-                        aws_account_id = st.secrets["aws"]["account_id"]
+                        aws_account_id = st.secrets["aws_credentials"]["AWS_ACCOUNT_ID"]
                         queue_url = f"https://sqs.eu-west-2.amazonaws.com/{aws_account_id}/greenmotion-sqs-queue"
 
                         with st.spinner("Waiting for SQS messages..."):
