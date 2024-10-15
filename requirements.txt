@@ -1,0 +1,4 @@
+seaborn
+boto3
+matplotlib
+pytz
