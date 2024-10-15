@@ -7,23 +7,6 @@ import re
 import streamlit as st
 from datetime import datetime
 import os
-from utils.data_utils import (
-    standardize_column_names,
-    rename_date_columns,
-    rename_total_price,
-    get_common_columns,
-    rename_supplier_column,
-    combine_dataframes,
-    clean_combined_data,
-    reorder_columns,
-    sort_dataframe,
-    extract_available_dates,
-    get_most_recent_date,
-    filter_data_by_date,
-    ensure_correct_data_types,
-    get_available_periods,
-    get_top_vehicles,
-)
 
 
 def process_doyouspain_data(df, car_groups):
