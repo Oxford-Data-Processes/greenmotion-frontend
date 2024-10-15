@@ -270,14 +270,14 @@ def load_data(selected_date, selected_hour):
                 st.session_state.df_combined = result["data"]
                 st.session_state.data_loaded = True
                 st.success("Data loaded successfully")
-                display_data_availability(result["data_availability"])
+                display_data_availability_custom(result["data_availability"])
 
         except Exception as e:
             st.error(f"An error occurred: {e}")
             st.session_state.data_loaded = False
 
 
-def display_data_availability(data_availability):
+def display_data_availability_custom(data_availability):
     # Display data availability in a more organized way
     st.subheader("Data Availability")
     col1, col2, col3 = st.columns(3)
