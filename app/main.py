@@ -29,7 +29,6 @@ from utils.data_utils import (
     filter_data_by_date,
     ensure_correct_data_types,
     get_available_periods,
-    get_top_vehicles,
 )
 from ui import display_results, display_results_custom, display_top_vehicles_per_group
 
@@ -629,7 +628,7 @@ def display_filtered_results(pickup_date, pickup_time, dropoff_date, dropoff_tim
     if selected_source != "All":
         filtered_df = filtered_df[filtered_df["source"] == selected_source]
 
-    top_vehicles = get_top_vehicles(filtered_df, num_vehicles)
+    top_vehicles = get_top_vehicles_custom(filtered_df, num_vehicles)
 
     display_results_custom(top_vehicles, rental_period, filtered_df, selected_car_group)
     display_top_vehicles_per_group(
@@ -639,7 +638,7 @@ def display_filtered_results(pickup_date, pickup_time, dropoff_date, dropoff_tim
     download_filtered_data(filtered_df)
 
 
-def get_top_vehicles(filtered_df, num_vehicles):
+def get_top_vehicles_custom(filtered_df, num_vehicles):
     if num_vehicles == "All":
         return filtered_df
     else:
