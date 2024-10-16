@@ -390,18 +390,49 @@ def custom_date_range(tab2):
         f"Rental period: {rental_period['days']} days, {rental_period['hours']} hours, and {rental_period['minutes']} minutes"
     )
 
+    # Check if dates or times have changed
+    dates_changed = check_if_dates_changed(pickup_date, pickup_time, dropoff_date, dropoff_time)
+
+    # Initialize fetching_data in session state if it doesn't exist
+    if 'fetching_data' not in st.session_state:
+        st.session_state.fetching_data = False
+
     fetch_button = st.button(
         "Fetch Data",
         key="fetch_custom_date_button",
-        disabled=("custom_df" in st.session_state),
+        disabled=(not dates_changed and "custom_df" in st.session_state) or st.session_state.fetching_data,
     )
 
     if fetch_button:
+        st.session_state.fetching_data = True
         fetch_data_custom(pickup_datetime, dropoff_datetime)
+        st.session_state.fetching_data = False
 
     if "custom_df" in st.session_state:
         display_filtered_results(pickup_date, pickup_time, dropoff_date, dropoff_time)
 
+def check_if_dates_changed(pickup_date, pickup_time, dropoff_date, dropoff_time):
+    if 'last_pickup_date' not in st.session_state:
+        st.session_state.last_pickup_date = pickup_date
+        st.session_state.last_pickup_time = pickup_time
+        st.session_state.last_dropoff_date = dropoff_date
+        st.session_state.last_dropoff_time = dropoff_time
+        return True
+
+    dates_changed = (
+        pickup_date != st.session_state.last_pickup_date or
+        pickup_time != st.session_state.last_pickup_time or
+        dropoff_date != st.session_state.last_dropoff_date or
+        dropoff_time != st.session_state.last_dropoff_time
+    )
+
+    if dates_changed:
+        st.session_state.last_pickup_date = pickup_date
+        st.session_state.last_pickup_time = pickup_time
+        st.session_state.last_dropoff_date = dropoff_date
+        st.session_state.last_dropoff_time = dropoff_time
+
+    return dates_changed
 
 def get_date_time_inputs(today):
     col1, col2, col3, col4 = st.columns(4)
