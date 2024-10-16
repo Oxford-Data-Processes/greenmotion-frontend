@@ -180,8 +180,10 @@ def display_filters(filtered_df):
 
 def search_by_date(tab1):
     col1, col2 = st.columns(2)
-    selected_date = select_date(col1)
-    selected_hour = select_time(col2, selected_date)
+    with col1:
+        selected_date = select_date(col1)
+    with col2:
+        selected_hour = select_time(col2, selected_date)
 
     initialize_session_state(selected_date, selected_hour)
 
