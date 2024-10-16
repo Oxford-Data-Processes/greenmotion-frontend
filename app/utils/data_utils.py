@@ -184,3 +184,23 @@ def get_closest_past_time(current_time=None, increased_search_date=None):
             return "17:00"  # If it's before 08:00, return the previous day's 17:00
         closest_time = max(past_times)
         return f"{closest_time.hour:02d}:00"
+
+
+def get_top_vehicles_custom(filtered_df, num_vehicles):
+    if num_vehicles == "All":
+        return filtered_df
+    else:
+        num_vehicles = int(num_vehicles)
+        return (
+            filtered_df.groupby("car_group")
+            .apply(lambda x: x.nsmallest(num_vehicles, "total_price"))
+            .reset_index(drop=True)
+        )
+
+
+def combine_dataframes_custom(dataframes):
+    df_combined = pd.concat(dataframes, ignore_index=True)
+    df_combined = clean_combined_data(df_combined)
+    df_combined = reorder_columns(df_combined)
+    df_combined = sort_dataframe(df_combined)
+    return df_combined

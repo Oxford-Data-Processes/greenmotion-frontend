@@ -7,6 +7,9 @@ import re
 import streamlit as st
 from datetime import datetime
 import os
+from utils.data_utils import standardize_column_names, rename_total_price, rename_supplier_column, combine_dataframes_custom
+from athena import run_athena_query, generate_query
+from s3 import read_car_groups_from_s3
 
 
 def process_doyouspain_data(df, car_groups):
@@ -238,3 +241,74 @@ def get_all_sqs_messages(queue_url):
             print(all_messages)
         else:
             print("No new messages. Waiting for new notifications...")
+
+def process_dataframe(df, car_groups, source):
+    if df.empty:
+        return []
+
+    try:
+        processed_df = process_data_by_source(df, car_groups, source)
+        if processed_df.empty:
+            return []
+        return [processed_df]
+    except Exception as e:
+        st.error(f"Error in process_dataframe for {source}: {str(e)}")
+        return []
+
+def process_data_by_source(df, car_groups, source):
+    try:
+        if source == "doyouspain":
+            df = process_doyouspain_data(df, car_groups)
+        elif source == "holidayautos":
+            df = process_holidayautos_data(df, car_groups)
+        elif source == "rentalcars":
+            df = process_rentalcars_data(df, car_groups)
+        else:
+            st.error(f"Unknown source: {source}")
+            return pd.DataFrame()
+
+        df = standardize_column_names(df)
+        df = rename_total_price(df)
+        df = rename_supplier_column(df)
+        df["source"] = source
+        
+        return df
+    except Exception as e:
+        st.error(f"Error processing data for {source}: {str(e)}")
+        return pd.DataFrame()
+
+def process_data(selected_date, selected_hour):
+    print("Entering process_data function")
+    year, month, day = selected_date.year, selected_date.month, selected_date.day
+
+    df_doyouspain = fetch_data("do_you_spain", year, month, day, selected_hour)
+    df_holidayautos = fetch_data("holiday_autos", year, month, day, selected_hour)
+    df_rentalcars = fetch_data("rental_cars", year, month, day, selected_hour)
+
+    data_availability = {
+        "do_you_spain": "Data available" if not df_doyouspain.empty else "No data",
+        "holiday_autos": "Data available" if not df_holidayautos.empty else "No data",
+        "rental_cars": "Data available" if not df_rentalcars.empty else "No data",
+    }
+
+    car_groups = read_car_groups_from_s3()
+    dataframes = []
+
+    dataframes.extend(process_dataframe(df_doyouspain, car_groups, "doyouspain"))
+    dataframes.extend(process_dataframe(df_holidayautos, car_groups, "holidayautos"))
+    dataframes.extend(process_dataframe(df_rentalcars, car_groups, "rentalcars"))
+
+    if not dataframes:
+        print("No data available for any source")
+        return {
+            "error": "No data available for any source",
+            "data_availability": data_availability,
+        }
+
+    df_combined = combine_dataframes_custom(dataframes)
+    print("Exiting process_data function")
+    return {"data": df_combined, "data_availability": data_availability}
+
+def fetch_data(source, year, month, day, hour):
+    query = generate_query(source, year, month, day, hour)
+    return run_athena_query(source, query)
