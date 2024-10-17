@@ -1,10 +1,6 @@
 # greenmotion-frontend
 
-
-
-
-TECH DEBT:
-
+TO DO:
 - Data processing/cleaning should be done in the backend
 - UI should be improved, using left hand menu instead of tabs
 - Each feature should be separated into a different module
@@ -14,5 +10,7 @@ TECH DEBT:
 - Create a tab explaining when the schedule workflows will run
 - Add mypy and pylint
 - Add unit and integration tests
+
+
 
 
