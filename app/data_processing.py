@@ -7,7 +7,12 @@ import re
 import streamlit as st
 from datetime import datetime
 import os
-from utils.data_utils import standardize_column_names, rename_total_price, rename_supplier_column, combine_dataframes_custom
+from utils.data_utils import (
+    standardize_column_names,
+    rename_total_price,
+    rename_supplier_column,
+    combine_dataframes_custom,
+)
 from athena import run_athena_query, generate_query
 from s3 import read_car_groups_from_s3
 
@@ -166,7 +171,7 @@ def trigger_lambda(site_name, pickup_datetime, dropoff_datetime):
 
 def extract_datetime_from_sns_message(message):
     # Regular expression to find the datetime in the message
-    match = re.search(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}", message)
+    match = re.search(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}", message)
     return match.group(0) if match else None
 
 
@@ -242,6 +247,7 @@ def get_all_sqs_messages(queue_url):
         else:
             print("No new messages. Waiting for new notifications...")
 
+
 def process_dataframe(df, car_groups, source):
     if df.empty:
         return []
@@ -254,6 +260,7 @@ def process_dataframe(df, car_groups, source):
     except Exception as e:
         st.error(f"Error in process_dataframe for {source}: {str(e)}")
         return []
+
 
 def process_data_by_source(df, car_groups, source):
     try:
@@ -271,11 +278,12 @@ def process_data_by_source(df, car_groups, source):
         df = rename_total_price(df)
         df = rename_supplier_column(df)
         df["source"] = source
-        
+
         return df
     except Exception as e:
         st.error(f"Error processing data for {source}: {str(e)}")
         return pd.DataFrame()
+
 
 def process_data(selected_date, selected_hour):
     print("Entering process_data function")
@@ -308,6 +316,7 @@ def process_data(selected_date, selected_hour):
     df_combined = combine_dataframes_custom(dataframes)
     print("Exiting process_data function")
     return {"data": df_combined, "data_availability": data_availability}
+
 
 def fetch_data(source, year, month, day, hour):
     query = generate_query(source, year, month, day, hour)

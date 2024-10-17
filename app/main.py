@@ -4,7 +4,11 @@ import os
 import pandas as pd
 from auth import login, logout, get_credentials
 from s3 import read_car_groups_from_s3
-from data_processing import process_doyouspain_data, process_holidayautos_data, process_rentalcars_data
+from data_processing import (
+    process_doyouspain_data,
+    process_holidayautos_data,
+    process_rentalcars_data,
+)
 from utils.data_utils import (
     standardize_column_names,
     extract_available_dates,
@@ -20,10 +24,26 @@ from utils.data_utils import (
     ensure_correct_data_types,
     get_available_periods,
 )
-from date_selection import select_date, select_time, get_date_time_inputs, validate_dropoff_date, calculate_rental_period
-from data_fetching import fetch_data, fetch_data_custom, handle_sqs_messages, fetch_and_process_data
+from date_selection import (
+    select_date,
+    select_time,
+    get_date_time_inputs,
+    validate_dropoff_date,
+    calculate_rental_period,
+)
+from data_fetching import (
+    fetch_data,
+    fetch_data_custom,
+    handle_sqs_messages,
+    fetch_and_process_data,
+)
 from filters import display_filters, apply_filters
-from results_display import display_results_and_download, display_filtered_results, display_data_availability, display_data_availability_custom
+from results_display import (
+    display_results_and_download,
+    display_filtered_results,
+    display_data_availability,
+    display_data_availability_custom,
+)
 from aws_setup import setup_aws_credentials
 
 # Set up AWS credentials and get the account ID
@@ -33,7 +53,10 @@ aws_account_id = setup_aws_credentials()
 st.set_page_config(page_icon="💰", page_title="Greenmotion Manchester", layout="wide")
 
 # Constants
-CAR_GROUPS_S3_PATH = f"s3://greenmotion-bucket-{aws_account_id}/car_groups/car_groups.csv"
+CAR_GROUPS_S3_PATH = (
+    f"s3://greenmotion-bucket-{aws_account_id}/car_groups/car_groups.csv"
+)
+
 
 def process_data(selected_date, selected_hour):
     year, month, day = selected_date.year, selected_date.month, selected_date.day
@@ -64,6 +87,7 @@ def process_data(selected_date, selected_hour):
     df_combined = combine_dataframes_custom(dataframes)
     return {"data": df_combined, "data_availability": data_availability}
 
+
 def process_dataframe(df, car_groups, source):
     if df.empty:
         return []
@@ -76,6 +100,7 @@ def process_dataframe(df, car_groups, source):
     except Exception as e:
         st.error(f"Error in process_dataframe for {source}: {str(e)}")
         return []
+
 
 def process_data_by_source(df, car_groups, source):
     try:
@@ -93,11 +118,12 @@ def process_data_by_source(df, car_groups, source):
         df = rename_total_price(df)
         df = rename_supplier_column(df)
         df["source"] = source
-        
+
         return df
     except Exception as e:
         st.error(f"Error processing data for {source}: {str(e)}")
         return pd.DataFrame()
+
 
 def combine_dataframes_custom(dataframes):
     df_combined = pd.concat(dataframes, ignore_index=True)
@@ -105,6 +131,7 @@ def combine_dataframes_custom(dataframes):
     df_combined = reorder_columns(df_combined)
     df_combined = sort_dataframe(df_combined)
     return df_combined
+
 
 def search_by_date(tab1):
     col1, col2 = st.columns(2)
@@ -122,6 +149,7 @@ def search_by_date(tab1):
         process_loaded_data(selected_date)
     else:
         st.write("Please pull data to see available rental periods.")
+
 
 def initialize_session_state(selected_date, selected_hour):
     if "data_loaded" not in st.session_state:
@@ -141,6 +169,7 @@ def initialize_session_state(selected_date, selected_hour):
         st.session_state.last_selected_date = selected_date
         st.session_state.last_selected_time = selected_hour
 
+
 def load_data(selected_date, selected_hour):
     with st.spinner("Loading data..."):
         try:
@@ -158,6 +187,7 @@ def load_data(selected_date, selected_hour):
             st.error(f"An error occurred: {e}")
             st.session_state.data_loaded = False
 
+
 def process_loaded_data(selected_date):
     df_combined = st.session_state.df_combined
     available_dates = extract_available_dates(df_combined)
@@ -171,7 +201,9 @@ def process_loaded_data(selected_date):
             available_periods = get_available_periods(filtered_df)
 
             if available_periods:
-                rental_period, selected_car_group, num_vehicles, selected_source = display_filters(filtered_df)
+                rental_period, selected_car_group, num_vehicles, selected_source = (
+                    display_filters(filtered_df)
+                )
 
                 filtered_df = apply_filters(
                     filtered_df,
@@ -192,6 +224,7 @@ def process_loaded_data(selected_date):
     else:
         st.write("No available dates for selection.")
 
+
 def custom_date_range(tab2):
     st.header("Custom Date Range Search")
     today = datetime.now().date()
@@ -208,15 +241,18 @@ def custom_date_range(tab2):
         f"Rental period: {rental_period['days']} days, {rental_period['hours']} hours, and {rental_period['minutes']} minutes"
     )
 
-    dates_changed = check_if_dates_changed(pickup_date, pickup_time, dropoff_date, dropoff_time)
+    dates_changed = check_if_dates_changed(
+        pickup_date, pickup_time, dropoff_date, dropoff_time
+    )
 
-    if 'fetching_data' not in st.session_state:
+    if "fetching_data" not in st.session_state:
         st.session_state.fetching_data = False
 
     fetch_button = st.button(
         "Fetch Data",
         key="fetch_custom_date_button",
-        disabled=(not dates_changed and "custom_df" in st.session_state) or st.session_state.fetching_data,
+        disabled=(not dates_changed and "custom_df" in st.session_state)
+        or st.session_state.fetching_data,
     )
 
     if fetch_button:
@@ -229,8 +265,9 @@ def custom_date_range(tab2):
     else:
         st.write("No custom data available. Please fetch data first.")
 
+
 def check_if_dates_changed(pickup_date, pickup_time, dropoff_date, dropoff_time):
-    if 'last_pickup_date' not in st.session_state:
+    if "last_pickup_date" not in st.session_state:
         st.session_state.last_pickup_date = pickup_date
         st.session_state.last_pickup_time = pickup_time
         st.session_state.last_dropoff_date = dropoff_date
@@ -238,10 +275,10 @@ def check_if_dates_changed(pickup_date, pickup_time, dropoff_date, dropoff_time)
         return True
 
     dates_changed = (
-        pickup_date != st.session_state.last_pickup_date or
-        pickup_time != st.session_state.last_pickup_time or
-        dropoff_date != st.session_state.last_dropoff_date or
-        dropoff_time != st.session_state.last_dropoff_time
+        pickup_date != st.session_state.last_pickup_date
+        or pickup_time != st.session_state.last_pickup_time
+        or dropoff_date != st.session_state.last_dropoff_date
+        or dropoff_time != st.session_state.last_dropoff_time
     )
 
     if dates_changed:
@@ -251,6 +288,7 @@ def check_if_dates_changed(pickup_date, pickup_time, dropoff_date, dropoff_time)
         st.session_state.last_dropoff_time = dropoff_time
 
     return dates_changed
+
 
 def main():
     st.title("Car Rental Data Analysis")
@@ -274,6 +312,7 @@ def main():
 
         with tab2:
             custom_date_range(tab2)
+
 
 if __name__ == "__main__":
     main()
