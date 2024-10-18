@@ -13,6 +13,7 @@ TO DO:
 - Add unit and integration tests
 - Move events to an events repository
 - Build github actions modules that are reusable (inside a separate repository?)
+- Do the same for serverless and for terraform, look into this: https://github.com/terraform-aws-modules/terraform-aws-lambda
 - Use Apache Iceberg to build a data warehouse for storing all data from S3 (for rtg automotive)
 - Build an API to interact with the data warehouse using FastAPI, lambda, api gateway and pydantic
 - Create backend project template
