@@ -3,6 +3,8 @@ import search_by_date
 import custom_date_range
 import home_page
 
+# Set the default layout to wide
+st.set_page_config(layout="wide")
 
 def main():
     st.sidebar.title("Menu")

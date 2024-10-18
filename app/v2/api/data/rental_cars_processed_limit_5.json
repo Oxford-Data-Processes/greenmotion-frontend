@@ -10,7 +10,11 @@
         "pickup_datetime": "2024-11-16T10:00:00.000",
         "dropoff_datetime": "2024-11-21T10:00:00.000",
         "rental_period": 5,
-        "source": "doyouspain"
+        "source": "rental_cars",
+        "day": 16,
+        "month": 10,
+        "year": 2024,
+        "hour": 12
     },
     {
         "make": "NISSAN",
@@ -23,20 +27,28 @@
         "pickup_datetime": "2024-11-16T10:00:00.000",
         "dropoff_datetime": "2024-12-07T10:00:00.000",
         "rental_period": 21,
-        "source": "do_you_spain"
+        "source": "rental_cars",
+        "day": 16,
+        "month": 10,
+        "year": 2024,
+        "hour": 12
     },
     {
         "make": "NISSAN",
         "model": "LEAF",
         "transmission": "AUTOMATIC",
         "car_group": "1ELE",
-        "supplier": "ALAMO",
+        "supplier": "GREEN MOTION",
         "total_price": 608.9,
         "price_per_day": 60.89,
         "pickup_datetime": "2024-11-16T10:00:00.000",
         "dropoff_datetime": "2024-11-26T10:00:00.000",
         "rental_period": 10,
-        "source": "do_you_spain"
+        "source": "rental_cars",
+        "day": 16,
+        "month": 10,
+        "year": 2024,
+        "hour": 12
     },
     {
         "make": "BMW",
@@ -49,6 +61,10 @@
         "pickup_datetime": "2024-11-16T10:00:00.000",
         "dropoff_datetime": "2024-11-23T10:00:00.000",
         "rental_period": 7,
-        "source": "do_you_spain"
+        "source": "rental_cars",
+        "day": 16,
+        "month": 10,
+        "year": 2024,
+        "hour": 12
     }
 ]
