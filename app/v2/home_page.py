@@ -1,19 +1,20 @@
 import streamlit as st
 import pandas as pd
+from aws_utils import s3
 
 
 def read_parquet_file():
-    file_path = "mocks/s3/do_you_spain/raw/year=2024/month=10/day=09/hour=09/rental_period=custom/data.parquet"
-    df = pd.read_parquet(file_path)
+    s3_handler = s3.S3Handler()
+    bucket_name = "mock-bucket"
+    file_path = "do_you_spain/raw/year=2024/month=10/day=09/hour=09/rental_period=custom/data.parquet"
+    parquet_data = s3_handler.load_parquet_from_s3(bucket_name, file_path)
+    df = pd.read_parquet(pd.io.common.BytesIO(parquet_data))
     return df
 
 
 def main():
     st.title("Home Page")
     st.write("Welcome to the Home Page!")
-    st.write("Navigate to the following options:")
-    st.write("Search by Date")
-    st.write("Custom Date Range")
 
     if st.button("Load Car Groups Data"):
         data = read_parquet_file()
