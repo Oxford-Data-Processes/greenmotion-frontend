@@ -16,7 +16,7 @@ def main():
     st.title("Home Page")
     st.write("Welcome to the Home Page!")
 
-    if st.button("Load Car Groups Data"):
+    if st.button("Load Parquet Data from S3"):
         data = read_parquet_file()
         st.dataframe(data)
 
