@@ -1,0 +1,54 @@
+[
+    {
+        "make": "NISSAN",
+        "model": "LEAF",
+        "transmission": "AUTOMATIC",
+        "car_group": "1ELE",
+        "supplier": "ALAMO",
+        "total_price": 304.33,
+        "price_per_day": 60.87,
+        "pickup_datetime": "2024-11-16T10:00:00.000",
+        "dropoff_datetime": "2024-11-21T10:00:00.000",
+        "rental_period": 5,
+        "source": "doyouspain"
+    },
+    {
+        "make": "NISSAN",
+        "model": "LEAF",
+        "transmission": "AUTOMATIC",
+        "car_group": "1ELE",
+        "supplier": "ALAMO",
+        "total_price": 1278.41,
+        "price_per_day": 60.88,
+        "pickup_datetime": "2024-11-16T10:00:00.000",
+        "dropoff_datetime": "2024-12-07T10:00:00.000",
+        "rental_period": 21,
+        "source": "do_you_spain"
+    },
+    {
+        "make": "NISSAN",
+        "model": "LEAF",
+        "transmission": "AUTOMATIC",
+        "car_group": "1ELE",
+        "supplier": "ALAMO",
+        "total_price": 608.9,
+        "price_per_day": 60.89,
+        "pickup_datetime": "2024-11-16T10:00:00.000",
+        "dropoff_datetime": "2024-11-26T10:00:00.000",
+        "rental_period": 10,
+        "source": "do_you_spain"
+    },
+    {
+        "make": "BMW",
+        "model": "3 SERIES",
+        "transmission": "AUTOMATIC",
+        "car_group": "2A",
+        "supplier": "DRIVALIA",
+        "total_price": 224.78,
+        "price_per_day": 32.11,
+        "pickup_datetime": "2024-11-16T10:00:00.000",
+        "dropoff_datetime": "2024-11-23T10:00:00.000",
+        "rental_period": 7,
+        "source": "do_you_spain"
+    }
+]
