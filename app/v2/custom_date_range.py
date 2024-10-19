@@ -1,8 +1,11 @@
 import streamlit as st
 from datetime import datetime, timedelta
 import pandas as pd
-import api.utils
+import pytz
+from aws_utils.sqs import SQSHandler
+from aws_utils.s3 import S3Handler
 from display_data import display_data_availability, display_filters, apply_filters, display_results, download_filtered_data
+import api
 
 def select_date_range():
     today = datetime.now().date()
@@ -28,18 +31,24 @@ def select_date_range():
 
     return pickup_datetime, dropoff_datetime, rental_period
 
+def trigger_lambdas(pickup_datetime, dropoff_datetime):
+    # Mock function to simulate triggering lambdas
+    st.info("Triggering lambdas for rental sites...")
+    # In the future, implement actual lambda triggering here
+
 def load_data(pickup_datetime, dropoff_datetime):
-    sources = ["do_you_spain", "holiday_autos", "rental_cars"]
+    suppliers = ["rental_cars", "do_you_spain", "holiday_autos"]
     dataframes = []
 
-    for source in sources:
-        data = api.utils.get_request(f"/table={source}/limit=1000")
+    start_date = pickup_datetime.strftime("%Y-%m-%d")
+    end_date = dropoff_datetime.strftime("%Y-%m-%d")
+
+    for supplier in suppliers:
+        data = api.utils.get_request(f"/table={supplier}/start_date={start_date}/end_date={end_date}")
         if data:
             df = pd.DataFrame(data)
-            df['datetime'] = pd.to_datetime(df['year'].astype(str) + '-' + df['month'].astype(str) + '-' + df['day'].astype(str) + ' ' + df['hour'].astype(str) + ':00:00')
-            df = df[(df['datetime'] >= pickup_datetime) & (df['datetime'] <= dropoff_datetime)]
-            if not df.empty:
-                dataframes.append(df)
+            df['source'] = supplier  # Add a 'source' column to identify the supplier
+            dataframes.append(df)
 
     if dataframes:
         return pd.concat(dataframes, ignore_index=True)

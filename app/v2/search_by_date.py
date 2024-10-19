@@ -54,7 +54,7 @@ def load_data(selected_date, selected_hour):
     dataframes = []
 
     for source in sources:
-        data = api.utils.get_request(f"/table={source}/limit=1000")
+        data = api.utils.get_request(f"/table={source}/limit=2000")
         if data:
             df = pd.DataFrame(data)
             df = df[

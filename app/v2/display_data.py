@@ -74,20 +74,28 @@ def apply_filters(df, rental_period, selected_car_group, selected_source, num_ve
 
     filtered_df = filtered_df.sort_values('total_price').reset_index(drop=True)
 
-    if num_vehicles != "All":
-        filtered_df = filtered_df.head(int(num_vehicles))
-
     return filtered_df
 
 def display_results(df, rental_period, selected_car_group, num_vehicles):
-    vehicles_loaded = len(df)
-    car_group_text = selected_car_group if selected_car_group != "All" else "All"
-    rental_period_text = rental_period if rental_period != "All" else "All"
-
-    st.subheader(f"Top {vehicles_loaded} Cheapest Vehicles in {car_group_text} Car Group Categories for {rental_period_text} Rental Days")
+    st.subheader("Top Cheapest Vehicles")
     
-    display_df = remove_internal_columns(df)
+    if selected_car_group == "All":
+        # Group by car_group and get top 3 cheapest for each
+        top_vehicles = df.groupby('car_group').apply(lambda x: x.nsmallest(3, 'total_price')).reset_index(drop=True)
+    else:
+        # If a specific car group is selected, just get the top vehicles for that group
+        if num_vehicles == "All":
+            top_vehicles = df[df['car_group'] == selected_car_group]
+        else:
+            top_vehicles = df[df['car_group'] == selected_car_group].nsmallest(int(num_vehicles), 'total_price')
     
+    # Sort the dataframe by car_group and then by total_price
+    top_vehicles = top_vehicles.sort_values(['car_group', 'total_price'])
+    
+    # Remove internal columns
+    display_df = remove_internal_columns(top_vehicles)
+    
+    # Display the results in a single dataframe
     st.dataframe(
         display_df.style
         .set_table_attributes('style="width: 100%; overflow-x: auto;"')
@@ -97,24 +105,29 @@ def display_results(df, rental_period, selected_car_group, num_vehicles):
             'rental_period': '{:.0f}'
         })
     )
-
-    n_vehicles = int(num_vehicles) if num_vehicles != "All" else len(df)
     
-    avg_prices = df.groupby('supplier')['total_price'].mean().sort_values(ascending=True)
+    # Display average price chart
+    display_average_price_chart(df, rental_period, selected_car_group)
 
-    fig = go.Figure(data=[
-        go.Bar(
-            x=avg_prices.index,
-            y=avg_prices.values,
-            text=avg_prices.values.round(2),
+def display_average_price_chart(df, rental_period, selected_car_group):
+    avg_prices = df.groupby(['car_group', 'supplier'])['total_price'].mean().reset_index()
+    
+    fig = go.Figure()
+    for car_group in avg_prices['car_group'].unique():
+        group_data = avg_prices[avg_prices['car_group'] == car_group]
+        fig.add_trace(go.Bar(
+            x=group_data['supplier'],
+            y=group_data['total_price'],
+            name=car_group,
+            text=group_data['total_price'].round(2),
             textposition='auto',
-        )
-    ])
-
+        ))
+    
     fig.update_layout(
-        title=f'Average Price per Supplier in {car_group_text} categories for {rental_period_text} Rental Periods',
+        title=f'Average Price per Supplier and Car Group for {rental_period} Rental Period(s)',
         xaxis_title='Supplier',
         yaxis_title='Average Total Price',
+        barmode='group',
         xaxis_tickangle=-45,
         height=600,
         width=900,
