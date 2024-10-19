@@ -6,6 +6,7 @@ from aws_utils.sqs import SQSHandler
 from aws_utils.s3 import S3Handler
 from display_data import display_data_availability, display_filters, apply_filters, display_results, download_filtered_data
 import api
+import time
 
 def select_date_range():
     today = datetime.now().date()
@@ -37,12 +38,32 @@ def trigger_lambdas(pickup_datetime, dropoff_datetime):
     # In the future, implement actual lambda triggering here
 
 def load_data(pickup_datetime, dropoff_datetime):
+    sqs_handler = SQSHandler()
+    s3_handler = S3Handler()
+
+    # Delete all SQS messages
+    queue_url = "greenmotion-sqs-queue"  # Replace with your actual SQS queue URL
+    sqs_handler.delete_all_sqs_messages(queue_url)
+
     suppliers = ["rental_cars", "do_you_spain", "holiday_autos"]
     dataframes = []
 
     start_date = pickup_datetime.strftime("%Y-%m-%d")
     end_date = dropoff_datetime.strftime("%Y-%m-%d")
 
+    # Get SQS messages until we see rental_cars in the message
+    rental_cars_found = False
+    while not rental_cars_found:
+        messages = sqs_handler.get_all_sqs_messages(queue_url)
+        for message in messages:
+            if "rental_cars" in message['message']:
+                rental_cars_found = True
+                break
+        if not rental_cars_found:
+            st.warning("Waiting for rental_cars data...")
+            time.sleep(5)  # Wait for 5 seconds before checking again
+
+    # Now load the data for all suppliers
     for supplier in suppliers:
         data = api.utils.get_request(f"/table={supplier}/start_date={start_date}/end_date={end_date}")
         if data:
