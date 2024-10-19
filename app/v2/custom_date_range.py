@@ -53,15 +53,19 @@ def load_data(pickup_datetime, dropoff_datetime):
 
     # Get SQS messages until we see rental_cars in the message
     rental_cars_found = False
+    warning_placeholder = st.empty()
     while not rental_cars_found:
+        warning_placeholder.warning("Waiting for rental_cars data...")
         messages = sqs_handler.get_all_sqs_messages(queue_url)
         for message in messages:
             if "rental_cars" in message['message']:
                 rental_cars_found = True
                 break
         if not rental_cars_found:
-            st.warning("Waiting for rental_cars data...")
-            time.sleep(5)  # Wait for 5 seconds before checking again
+            time.sleep(1)  # Wait for 5 seconds before checking again
+
+    warning_placeholder.empty()  # Remove the warning message
+    st.success("Data received. Loading...")
 
     # Now load the data for all suppliers
     for supplier in suppliers:
