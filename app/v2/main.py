@@ -9,12 +9,10 @@ st.set_page_config(layout="wide")
 def main():
     st.sidebar.title("Menu")
     selection = st.sidebar.radio(
-        "Select an option:", ["Homepage", "Search by Date", "Custom Date Range"]
+        "Select an option:", ["Search by Date", "Custom Date Range"]
     )
 
-    if selection == "Homepage":
-        home_page.main()
-    elif selection == "Search by Date":
+    if selection == "Search by Date":
         search_by_date.main()
     elif selection == "Custom Date Range":
         custom_date_range.main()
