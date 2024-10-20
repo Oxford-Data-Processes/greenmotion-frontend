@@ -3,6 +3,8 @@ import pandas as pd
 from aws_utils import s3
 
 
+# TODO: remove this file
+
 def read_parquet_file():
     s3_handler = s3.S3Handler()
     bucket_name = "mock-bucket"
