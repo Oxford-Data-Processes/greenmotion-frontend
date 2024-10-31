@@ -11,8 +11,6 @@ app = FastAPI()
 @app.get("/items/")
 async def read_items(
     table_name: str,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
     limit: int = 5,
 ):
     current_directory = os.getcwd()

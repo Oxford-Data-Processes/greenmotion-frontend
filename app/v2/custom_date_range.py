@@ -77,16 +77,14 @@ def load_data(pickup_datetime, dropoff_datetime):
                 rental_cars_found = True
                 break
         if not rental_cars_found:
-            time.sleep(1)  # Wait for 5 seconds before checking again
+            time.sleep(2)  # Wait for 5 seconds before checking again
 
     warning_placeholder.empty()  # Remove the warning message
     st.success("Data received. Loading...")
 
     # Now load the data for all suppliers
     for supplier in suppliers:
-        data = api.utils.get_request(
-            f"/items/?table_name={supplier}&start_date={start_date}&end_date={end_date}"
-        )
+        data = api.utils.get_request(f"/items/?table_name={supplier}")
         if data:
             df = pd.DataFrame(data)
             dataframes.append(df)
