@@ -1,9 +1,7 @@
 import streamlit as st
 from datetime import datetime, timedelta
 import pandas as pd
-import pytz
-from aws_utils.sqs import SQSHandler
-from aws_utils.s3 import S3Handler
+from aws_utils import sqs
 from display_data import (
     display_data_availability,
     display_filters,
@@ -13,6 +11,8 @@ from display_data import (
 )
 import api
 import time
+import toml
+import requests
 
 
 def select_date_range():
@@ -35,38 +35,63 @@ def select_date_range():
     with col4:
         dropoff_time = st.time_input("Drop-off Time", value=default_time)
 
-    pickup_datetime = datetime.combine(pickup_date, pickup_time)
-    dropoff_datetime = datetime.combine(dropoff_date, dropoff_time)
-    rental_period = (dropoff_datetime - pickup_datetime).days
+    pickup_datetime = datetime.combine(pickup_date, pickup_time).strftime(
+        "%Y-%m-%dT%H:%M:%S"
+    )
+    dropoff_datetime = datetime.combine(dropoff_date, dropoff_time).strftime(
+        "%Y-%m-%dT%H:%M:%S"
+    )
+    return pickup_datetime, dropoff_datetime
 
-    st.info(
-        f"Rental period: {rental_period} days, {(dropoff_datetime - pickup_datetime).seconds // 3600} hours, and {((dropoff_datetime - pickup_datetime).seconds % 3600) // 60} minutes"
+
+import os
+import requests
+
+
+def trigger_github_actions(repository_name, workflow, branch_name, inputs, token):
+    repository_full_name = f"Oxford-Data-Processes/{repository_name}"
+    url = f"https://api.github.com/repos/{repository_full_name}/actions/workflows/{workflow}.yml/dispatches"
+    headers = {
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+
+    payload = {"ref": branch_name, "inputs": inputs}
+    response = requests.post(url, headers=headers, json=payload)
+    return response
+
+
+def trigger_workflow(site_name, pickup_datetime, dropoff_datetime):
+    token = st.secrets["github"]["token"]
+    branch_name = "development"
+    location = "manchester"
+    custom_config = "true"
+    stage = "dev"
+    repository_name = "greenmotion"
+    workflow = f"trigger_workflow_{stage}"
+    inputs = {
+        "SITE_NAME": site_name,
+        "LOCATION": location,
+        "CUSTOM_CONFIG": custom_config,
+        "PICKUP_DATETIME": pickup_datetime,
+        "DROPOFF_DATETIME": dropoff_datetime,
+    }
+
+    response = trigger_github_actions(
+        repository_name, workflow, branch_name, inputs, token
     )
 
-    return pickup_datetime, dropoff_datetime, rental_period
-
-
-def trigger_lambdas(pickup_datetime, dropoff_datetime):
-    # Mock function to simulate triggering lambdas
-    st.info("Triggering lambdas for rental sites...")
-    # In the future, implement actual lambda triggering here
+    return response
 
 
 def load_data(pickup_datetime, dropoff_datetime):
-    sqs_handler = SQSHandler()
-    s3_handler = S3Handler()
-
-    # Delete all SQS messages
-    queue_url = "greenmotion-sqs-queue"  # Replace with your actual SQS queue URL
+    sqs_handler = sqs.SQSHandler()
+    queue_url = "greenmotion-sqs-queue"
     sqs_handler.delete_all_sqs_messages(queue_url)
 
     suppliers = ["rental_cars", "do_you_spain", "holiday_autos"]
     dataframes = []
 
-    start_date = pickup_datetime.strftime("%Y-%m-%d")
-    end_date = dropoff_datetime.strftime("%Y-%m-%d")
-
-    # Get SQS messages until we see rental_cars in the message
     rental_cars_found = False
     warning_placeholder = st.empty()
     while not rental_cars_found:
@@ -84,7 +109,9 @@ def load_data(pickup_datetime, dropoff_datetime):
 
     # Now load the data for all suppliers
     for supplier in suppliers:
-        data = api.utils.get_request(f"/items/?table_name={supplier}")
+        data = api.utils.get_request(
+            f"/items/?table_name={supplier}&pickup_datetime={pickup_datetime}&dropoff_datetime={dropoff_datetime}"
+        )
         if data:
             df = pd.DataFrame(data)
             dataframes.append(df)
@@ -98,10 +125,14 @@ def load_data(pickup_datetime, dropoff_datetime):
 def main():
     st.title("Custom Date Range Search")
 
-    pickup_datetime, dropoff_datetime, rental_period = select_date_range()
+    pickup_datetime, dropoff_datetime = select_date_range()
 
     if st.button("Fetch Data"):
         with st.spinner("Loading data..."):
+            site_names = ["rental_cars", "do_you_spain", "holiday_autos"]
+            for site_name in site_names:
+                trigger_workflow(site_name, pickup_datetime, dropoff_datetime)
+
             df = load_data(pickup_datetime, dropoff_datetime)
 
         if not df.empty:
@@ -122,7 +153,6 @@ def main():
             rental_period,
             selected_car_group,
             selected_source,
-            num_vehicles,
         )
 
         display_results(filtered_df, rental_period, selected_car_group, num_vehicles)

@@ -67,7 +67,7 @@ def display_filters(df):
     return rental_period, selected_car_group, num_vehicles, selected_source
 
 
-def apply_filters(df, rental_period, selected_car_group, selected_source, num_vehicles):
+def apply_filters(df, rental_period, selected_car_group, selected_source):
     filtered_df = df.copy()
 
     if rental_period != "All":
@@ -117,7 +117,6 @@ def display_results(df, rental_period, selected_car_group, num_vehicles):
             {
                 "price_per_day": "{:.2f}",
                 "total_price": "{:.2f}",
-                "rental_period": "{:.0f}",
             }
         )
     )
