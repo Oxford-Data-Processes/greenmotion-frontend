@@ -2,7 +2,14 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 import api.utils
-from display_data import display_data_availability, display_filters, apply_filters, display_results, download_filtered_data
+from display_data import (
+    display_data_availability,
+    display_filters,
+    apply_filters,
+    display_results,
+    download_filtered_data,
+)
+
 
 def select_date():
     min_date = datetime(2024, 10, 4).date()
@@ -16,6 +23,7 @@ def select_date():
         max_value=max_date,
     )
     return selected_date
+
 
 def select_time(selected_date):
     current_time = datetime.now().time()
@@ -42,11 +50,15 @@ def select_time(selected_date):
         st.warning("No data available for the selected date and time.")
         return None
 
+
 def get_closest_past_time(current_time, reference_date):
     times = ["08:00", "12:00", "17:00"]
     current_datetime = datetime.combine(reference_date, current_time)
-    past_times = [t for t in times if datetime.strptime(t, "%H:%M").time() <= current_time]
+    past_times = [
+        t for t in times if datetime.strptime(t, "%H:%M").time() <= current_time
+    ]
     return max(past_times) if past_times else times[-1]
+
 
 def load_data(selected_date, selected_hour):
     year, month, day = selected_date.year, selected_date.month, selected_date.day
@@ -54,14 +66,14 @@ def load_data(selected_date, selected_hour):
     dataframes = []
 
     for source in sources:
-        data = api.utils.get_request(f"/table={source}/limit=2000")
+        data = api.utils.get_request(f"/items/?table_name={source}")
         if data:
             df = pd.DataFrame(data)
             df = df[
-                (df['day'] == day) &
-                (df['month'] == month) &
-                (df['year'] == year) &
-                (df['hour'] == int(selected_hour))
+                (df["day"] == day)
+                & (df["month"] == month)
+                & (df["year"] == year)
+                & (df["hour"] == int(selected_hour))
             ]
             if not df.empty:
                 dataframes.append(df)
@@ -70,6 +82,7 @@ def load_data(selected_date, selected_hour):
         return pd.concat(dataframes, ignore_index=True)
     else:
         return pd.DataFrame()
+
 
 def main():
     st.title("Search by Date")
@@ -93,16 +106,25 @@ def main():
             st.warning("No data available for the selected date and time.")
             return
 
-    if 'original_df' in st.session_state:
+    if "original_df" in st.session_state:
         display_data_availability(st.session_state.original_df)
 
-        rental_period, selected_car_group, num_vehicles, selected_source = display_filters(st.session_state.original_df)
-        filtered_df = apply_filters(st.session_state.original_df, rental_period, selected_car_group, selected_source, num_vehicles)
+        rental_period, selected_car_group, num_vehicles, selected_source = (
+            display_filters(st.session_state.original_df)
+        )
+        filtered_df = apply_filters(
+            st.session_state.original_df,
+            rental_period,
+            selected_car_group,
+            selected_source,
+            num_vehicles,
+        )
 
         display_results(filtered_df, rental_period, selected_car_group, num_vehicles)
         download_filtered_data(filtered_df)
     else:
         st.write("Please pull data to see available rental periods.")
+
 
 if __name__ == "__main__":
     main()
