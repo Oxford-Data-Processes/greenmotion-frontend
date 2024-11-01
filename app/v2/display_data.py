@@ -1,24 +1,5 @@
-# The module which can be reused to display data for all the pages
 import streamlit as st
-import api.utils
-import pandas as pd
 import plotly.graph_objects as go
-
-
-def main():
-    table_options = ["do_you_spain", "rental_cars", "holiday_autos"]
-    selected_table = st.selectbox("Select a table:", table_options)
-    st.write(f"You selected: {selected_table}")
-
-    if selected_table:
-        if st.button("Get Data"):
-            data = api.utils.get_request(f"/items/?table_name={selected_table}")
-            df = pd.DataFrame(data)
-            st.dataframe(df)
-
-
-if __name__ == "__main__":
-    main()
 
 
 def display_data_availability(df):
@@ -88,14 +69,12 @@ def display_results(df, rental_period, selected_car_group, num_vehicles):
     st.subheader("Top Cheapest Vehicles")
 
     if selected_car_group == "All":
-        # Group by car_group and get top 3 cheapest for each
         top_vehicles = (
             df.groupby("car_group")
             .apply(lambda x: x.nsmallest(3, "total_price"))
             .reset_index(drop=True)
         )
     else:
-        # If a specific car group is selected, just get the top vehicles for that group
         if num_vehicles == "All":
             top_vehicles = df[df["car_group"] == selected_car_group]
         else:
@@ -103,13 +82,10 @@ def display_results(df, rental_period, selected_car_group, num_vehicles):
                 int(num_vehicles), "total_price"
             )
 
-    # Sort the dataframe by car_group and then by total_price
     top_vehicles = top_vehicles.sort_values(["car_group", "total_price"])
 
-    # Remove internal columns
     display_df = remove_internal_columns(top_vehicles)
 
-    # Display the results in a single dataframe
     st.dataframe(
         display_df.style.set_table_attributes(
             'style="width: 100%; overflow-x: auto;"'
@@ -121,7 +97,6 @@ def display_results(df, rental_period, selected_car_group, num_vehicles):
         )
     )
 
-    # Display average price chart
     display_average_price_chart(df, rental_period, selected_car_group)
 
 
@@ -168,3 +143,19 @@ def download_filtered_data(filtered_df):
         file_name="filtered_rental_comparison_custom.csv",
         mime="text/csv",
     )
+
+
+def main(df):
+    display_data_availability(df)
+    rental_period, selected_car_group, num_vehicles, selected_source = display_filters(
+        df
+    )
+    filtered_df = apply_filters(
+        df,
+        rental_period,
+        selected_car_group,
+        selected_source,
+    )
+
+    display_results(filtered_df, rental_period, selected_car_group, num_vehicles)
+    download_filtered_data(filtered_df)

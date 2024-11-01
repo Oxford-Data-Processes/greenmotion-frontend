@@ -84,13 +84,10 @@ def trigger_workflow(site_name, pickup_datetime, dropoff_datetime):
     return response
 
 
-def load_data(pickup_datetime, dropoff_datetime):
+def wait_for_workflow_completion():
     sqs_handler = sqs.SQSHandler()
     queue_url = "greenmotion-sqs-queue"
     sqs_handler.delete_all_sqs_messages(queue_url)
-
-    suppliers = ["rental_cars", "do_you_spain", "holiday_autos"]
-    dataframes = []
 
     rental_cars_found = False
     warning_placeholder = st.empty()
@@ -102,10 +99,16 @@ def load_data(pickup_datetime, dropoff_datetime):
                 rental_cars_found = True
                 break
         if not rental_cars_found:
-            time.sleep(2)  # Wait for 5 seconds before checking again
+            time.sleep(5)
 
-    warning_placeholder.empty()  # Remove the warning message
+    warning_placeholder.empty()
     st.success("Data received. Loading...")
+
+
+def load_data(pickup_datetime, dropoff_datetime):
+
+    suppliers = ["rental_cars", "do_you_spain", "holiday_autos"]
+    dataframes = []
 
     # Now load the data for all suppliers
     for supplier in suppliers:
@@ -127,9 +130,13 @@ def main():
 
     pickup_datetime, dropoff_datetime = select_date_range()
 
-    if st.button("Fetch Data"):
+    if st.button("Trigger Web Scraping"):
         with st.spinner("Loading data..."):
-            site_names = ["rental_cars", "do_you_spain", "holiday_autos"]
+            site_names = [
+                "do_you_spain",
+                "holiday_autos",
+                "rental_cars",
+            ]
             for site_name in site_names:
                 trigger_workflow(site_name, pickup_datetime, dropoff_datetime)
 

@@ -1,21 +1,32 @@
-import streamlit as st
-import search_by_date
-import custom_date_range
-import home_page
+# import streamlit as st
+# import app.v2.data_viewer as data_viewer
+# import app.v2.custom_search as custom_search
+# import app.v2.custom_search_logs as custom_search_logs
 
-# Set the default layout to wide
+# st.set_page_config(layout="wide")
+
+
+import streamlit as st
+import data_viewer
+import custom_search
+import custom_search_logs
+
+
 st.set_page_config(layout="wide")
+
 
 def main():
     st.sidebar.title("Menu")
     selection = st.sidebar.radio(
-        "Select an option:", ["Search by Date", "Custom Date Range"]
+        "Select an option:", ["Data Viewer", "Custom Search", "Custom Search Logs"]
     )
 
-    if selection == "Search by Date":
-        search_by_date.main()
-    elif selection == "Custom Date Range":
-        custom_date_range.main()
+    if selection == "Data Viewer":
+        data_viewer.main()
+    elif selection == "Custom Search":
+        custom_search.main()
+    elif selection == "Custom Search Logs":
+        custom_search_logs.main()
 
 
 if __name__ == "__main__":
