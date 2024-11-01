@@ -3,7 +3,7 @@ import streamlit as st
 from datetime import datetime, timedelta
 import requests
 import time
-from aws_utils import sqs, iam
+from aws_utils import sqs, iam, logs
 import re
 
 iam_instance = iam.IAM(stage=st.secrets["aws_credentials"]["STAGE"])
@@ -134,7 +134,11 @@ def wait_for_data():
 
 def main():
     st.title("Custom Search")
+    project = "greenmotion"
+    bucket_name = f"{project}-bucket-{os.environ['AWS_ACCOUNT_ID']}"
     location = "manchester"
+
+    logs_handler = logs.LogsHandler()
 
     pickup_datetime, dropoff_datetime = select_date_range()
 
@@ -149,9 +153,21 @@ def main():
                 trigger_workflow(location, site_name, pickup_datetime, dropoff_datetime)
 
         st.success(
-            f"Successfully triggered custom search with the following parameters:\nPickup datetime: {pickup_datetime}\nDropoff datetime: {dropoff_datetime}"
+            f"Successfully triggered custom search with the following parameters: Pickup datetime: {pickup_datetime} | Dropoff datetime: {dropoff_datetime}"
+        )
+        logs_handler.log_action(
+            bucket_name,
+            "frontend",
+            f"CUSTOM_SEARCH_TRIGGERED | pickup_datetime={pickup_datetime} | dropoff_datetime={dropoff_datetime}",
+            "user",
         )
         wait_for_data()
+        logs_handler.log_action(
+            bucket_name,
+            "frontend",
+            f"CUSTOM_SEARCH_FINISHED | pickup_datetime={pickup_datetime} | dropoff_datetime={dropoff_datetime}",
+            "user",
+        )
 
 
 if __name__ == "__main__":
