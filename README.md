@@ -3,6 +3,7 @@
 TODO:
 - Set the location based on the username at login (eg. manchester, london, etc.)
 - Test for multiple locations
+- Create a log that gets all the custom searches that have been run (filtering dataframe???)
 
 Commands:
 

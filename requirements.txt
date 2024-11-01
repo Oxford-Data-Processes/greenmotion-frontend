@@ -1,4 +1,2 @@
-seaborn
-boto3
-matplotlib
-pytz
+plotly
+git+https://github.com/Oxford-Data-Processes/aws-utils.git

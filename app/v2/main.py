@@ -8,7 +8,7 @@ st.set_page_config(layout="wide")
 
 
 def main():
-    st.sidebar.title("Menu")
+    st.sidebar.title("Rental Car Data Tool")
     selection = st.sidebar.radio(
         "Select an option:", ["Data Viewer", "Custom Search", "Custom Search Logs"]
     )
