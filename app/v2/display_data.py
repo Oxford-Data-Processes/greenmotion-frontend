@@ -83,7 +83,6 @@ def display_results(df, rental_period, selected_car_group, num_vehicles):
             )
 
     top_vehicles = top_vehicles.sort_values(["car_group", "total_price"])
-
     display_df = remove_internal_columns(top_vehicles)
 
     st.dataframe(
@@ -91,16 +90,15 @@ def display_results(df, rental_period, selected_car_group, num_vehicles):
             'style="width: 100%; overflow-x: auto;"'
         ).format(
             {
-                "price_per_day": "{:.2f}",
                 "total_price": "{:.2f}",
             }
         )
     )
 
-    display_average_price_chart(df, rental_period, selected_car_group)
+    display_average_price_chart(df, rental_period)
 
 
-def display_average_price_chart(df, rental_period, selected_car_group):
+def display_average_price_chart(df, rental_period):
     avg_prices = (
         df.groupby(["car_group", "supplier"])["total_price"].mean().reset_index()
     )

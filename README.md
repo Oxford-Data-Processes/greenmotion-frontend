@@ -1,5 +1,8 @@
 # greenmotion-frontend
 
+TODO:
+- Set the location based on the username at login (eg. manchester, london, etc.)
+- Test for multiple locations
 
 Commands:
 

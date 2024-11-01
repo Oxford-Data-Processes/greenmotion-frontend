@@ -8,5 +8,4 @@ def get_request(endpoint, params=None):
     if response.status_code == 200:
         return response.json()
     else:
-        print(f"Failed to call {endpoint}: {response.status_code}")
-        return None
+        raise Exception(f"Failed to call {endpoint}: {response.status_code}")
