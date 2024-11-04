@@ -200,13 +200,13 @@ def select_date(column):
     # Date selection
     min_date = datetime(2024, 10, 4).date()
     today = datetime.now(TIMEZONE).date()
-    max_date = min(today, min_date + timedelta(days=30))
+    min_date = today - timedelta(days=30)  # Allow up to 30 days in the past
+    max_date = today  # Only allow up to today
 
     # Use today's date as the default value
-    default_date = today if today >= min_date and today <= max_date else min_date
     selected_date = st.date_input(
         "Select a date",
-        value=default_date,
+        value=today,
         min_value=min_date,
         max_value=max_date,
     )
@@ -219,13 +219,13 @@ def select_time(column, selected_date):
     today = datetime.now(TIMEZONE).date()
 
     if selected_date < today:
+        # For past dates, show all times
         available_times = ["08:00", "12:00", "17:00"]
     else:
-        available_time = get_closest_past_time(
-            current_time, datetime(2024, 10, 4).date()
-        )
+        # For today, only show times that are in the past
         available_times = [
-            t for t in ["08:00", "12:00", "17:00"] if t <= available_time
+            t for t in ["08:00", "12:00", "17:00"] 
+            if datetime.strptime(t, "%H:%M").time() < current_time
         ]
 
     if available_times:
@@ -331,9 +331,7 @@ def process_loaded_data(selected_date):
         st.write("No available dates for selection.")
 
 
-def apply_filters(
-    filtered_df, rental_period, selected_car_group, selected_source, num_vehicles
-):
+def apply_filters(filtered_df, rental_period, selected_car_group, selected_source, num_vehicles):
     if rental_period != "All":
         filtered_df = filtered_df[filtered_df["rental_period"] == rental_period]
 
@@ -343,23 +341,19 @@ def apply_filters(
     if selected_source != "All":
         filtered_df = filtered_df[filtered_df["source"] == selected_source]
 
-    if num_vehicles == "All":
-        num_vehicles = len(filtered_df)
-    else:
-        num_vehicles = int(num_vehicles)
-
     return filtered_df
 
 
-def display_results_and_download(
-    filtered_df, rental_period, selected_car_group, num_vehicles
-):
-    top_vehicles = get_top_vehicles(filtered_df, rental_period, num_vehicles)
+def display_results_and_download(filtered_df, rental_period, selected_car_group, num_vehicles):
+    # Convert num_vehicles to integer if it's not "All"
+    n_vehicles = len(filtered_df) if num_vehicles == "All" else int(num_vehicles)
+    
+    top_vehicles = get_top_vehicles(filtered_df, rental_period, n_vehicles)
 
     # Use the original filtered_df for display functions
     display_results(top_vehicles, rental_period, filtered_df, selected_car_group)
     display_top_vehicles_per_group(
-        filtered_df, selected_car_group, rental_period, num_vehicles
+        filtered_df, selected_car_group, rental_period, n_vehicles
     )
 
     # Create a copy without the columns for download
