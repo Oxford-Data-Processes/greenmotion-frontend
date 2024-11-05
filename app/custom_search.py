@@ -159,14 +159,14 @@ def main():
             bucket_name,
             "frontend",
             f"CUSTOM_SEARCH_TRIGGERED | pickup_datetime={pickup_datetime} | dropoff_datetime={dropoff_datetime}",
-            "user",
+            "user_1",
         )
         wait_for_data()
         logs_handler.log_action(
             bucket_name,
             "frontend",
             f"CUSTOM_SEARCH_FINISHED | pickup_datetime={pickup_datetime} | dropoff_datetime={dropoff_datetime}",
-            "user",
+            "user_1",
         )
 
 
