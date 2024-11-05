@@ -1,6 +1,6 @@
 import requests
 
-BASE_URL = "https://t2ahwaivrk.execute-api.eu-west-2.amazonaws.com/dev/"
+BASE_URL = "https://84ggcq4ff2.execute-api.eu-west-2.amazonaws.com/dev/"
 
 
 def get_request(endpoint, params=None):
