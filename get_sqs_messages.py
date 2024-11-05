@@ -1,12 +1,7 @@
 import os
 from aws_utils import iam
 
-iam_instance = iam.IAM(stage=os.environ["STAGE"])
-iam.AWSCredentials.get_aws_credentials(
-    aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID_ADMIN"],
-    aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY_ADMIN"],
-    iam_instance=iam_instance,
-)
+iam.get_aws_credentials(os.environ)
 
 import os
 import boto3

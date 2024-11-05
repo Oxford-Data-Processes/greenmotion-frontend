@@ -6,12 +6,7 @@ import time
 from aws_utils import sqs, iam, logs
 import re
 
-iam_instance = iam.IAM(stage=st.secrets["aws_credentials"]["STAGE"])
-iam.AWSCredentials.get_aws_credentials(
-    aws_access_key_id=st.secrets["aws_credentials"]["AWS_ACCESS_KEY_ID_ADMIN"],
-    aws_secret_access_key=st.secrets["aws_credentials"]["AWS_SECRET_ACCESS_KEY_ADMIN"],
-    iam_instance=iam_instance,
-)
+iam.get_aws_credentials(st.secrets["aws_credentials"])
 
 
 def transform_sns_messages(messages):
