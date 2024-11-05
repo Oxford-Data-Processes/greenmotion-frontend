@@ -72,8 +72,13 @@ def apply_filters(df, rental_period, selected_car_group, selected_source):
 
 
 def display_results(df, rental_period, selected_car_group, num_vehicles):
-    st.subheader("Top Cheapest Vehicles")
-
+    # Create dynamic title
+    num_vehicles_text = str(num_vehicles) if num_vehicles != "All" else "All"
+    car_group_text = f"in {selected_car_group}" if selected_car_group != "All" else "across All Car Groups"
+    rental_period_text = f"for {rental_period} Day Rental" if rental_period != "All" else "for All Rental Periods"
+    
+    st.subheader(f"Top {num_vehicles_text} Cheapest Vehicles {car_group_text} {rental_period_text}")
+    
     # Create a copy of the dataframe to avoid modifying the original
     display_df = df.copy()
 
@@ -152,14 +157,14 @@ def download_filtered_data(filtered_df):
 
 
 def main(df):
-    if 'original_df' not in st.session_state:
-        st.session_state.original_df = df.copy()
+    if 'df' not in st.session_state or st.session_state.df is None:
+        st.session_state.df = df.copy()
     
-    display_data_availability(st.session_state.original_df)
-    rental_period, selected_car_group, num_vehicles, selected_source = display_filters(st.session_state.original_df)
+    display_data_availability(st.session_state.df)
+    rental_period, selected_car_group, num_vehicles, selected_source = display_filters(st.session_state.df)
     
     filtered_df = apply_filters(
-        st.session_state.original_df,
+        st.session_state.df,
         rental_period,
         selected_car_group,
         selected_source,

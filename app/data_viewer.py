@@ -73,11 +73,15 @@ def load_data_and_display(
         df = load_data(
             search_datetime, pickup_datetime, dropoff_datetime, is_custom_search
         )
+        st.write(f"Loaded data shape: {df.shape}")
 
     if not df.empty:
         st.success("Data loaded successfully")
-        st.session_state.df = df.copy()
-        display_data.main(df)
+        if 'df' not in st.session_state:
+            st.write("Initializing session state with loaded data")
+            st.session_state.df = df.copy()
+        st.write(f"Session state data shape: {st.session_state.df.shape}")
+        display_data.main(st.session_state.df)
     else:
         st.warning("No data available for the selected date and time.")
 
@@ -93,6 +97,7 @@ def handle_scheduled_search():
         search_datetime = f"{selected_date}T{selected_hour}:00:00"
 
     if st.button("Load data"):
+        st.session_state.data_loaded = True
         load_data_and_display(search_datetime)
 
 
@@ -122,43 +127,33 @@ def get_recent_searches():
 
 
 def handle_custom_search():
-    # Add radio selection for new search or previous search
-    search_mode = st.radio("Search mode", ["New search", "Load previous search"])
-    
-    if search_mode == "New search":
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            pickup_date = select_date("Select pickup date", max_value=False)
-        with col2:
-            pickup_time = select_time(restricted_times=False, key_suffix="_pickup")
-            pickup_datetime = f"{pickup_date}T{pickup_time}:00:00"
-        with col3:
-            dropoff_date = select_date("Select dropoff date", max_value=False)
-        with col4:
-            dropoff_time = select_time(restricted_times=False, key_suffix="_dropoff")
-            dropoff_datetime = f"{dropoff_date}T{dropoff_time}:00:00"
-    else:
-        # Show dropdown of recent searches
-        recent_searches = get_recent_searches()
-        if not recent_searches:
-            st.warning("No previous searches found")
-            return
-            
-        selected_search = st.selectbox(
-            "Select previous search",
-            options=recent_searches,
-            format_func=lambda x: x['display']
-        )
-        pickup_datetime = selected_search['pickup']
-        dropoff_datetime = selected_search['dropoff']
+    recent_searches = get_recent_searches()
+    if not recent_searches:
+        st.warning("No previous searches found")
+        return
+        
+    selected_search = st.selectbox(
+        "Select previous search",
+        options=recent_searches,
+        format_func=lambda x: x['display']
+    )
+    pickup_datetime = selected_search['pickup']
+    dropoff_datetime = selected_search['dropoff']
 
     if st.button("Load data"):
+        st.session_state.data_loaded = True
+        st.session_state.pickup_datetime = pickup_datetime
+        st.session_state.dropoff_datetime = dropoff_datetime
         load_data_and_display(
             None,
             pickup_datetime,
             dropoff_datetime,
             is_custom_search=True,
         )
+
+    if 'data_loaded' in st.session_state and st.session_state.data_loaded:
+        if 'df' in st.session_state:
+            display_data.main(st.session_state.df)
 
 
 def main():
