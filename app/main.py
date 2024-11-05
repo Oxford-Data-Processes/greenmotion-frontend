@@ -8,7 +8,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
     page_title="Car Rental Data Tool",
     page_icon="🚗",
-    theme="light",
 )
 
 
