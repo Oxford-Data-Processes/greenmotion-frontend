@@ -3,10 +3,9 @@ import pandas as pd
 from aws_utils import logs, iam
 import os
 
-iam.get_aws_credentials(st.secrets["aws_credentials"])
-
 
 def main():
+    iam.get_aws_credentials(st.secrets["aws_credentials"])
     project = "greenmotion"
     bucket_name = f"{project}-bucket-{os.environ['AWS_ACCOUNT_ID']}"
     st.title("Custom Search Logs")

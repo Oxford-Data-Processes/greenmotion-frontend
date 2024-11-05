@@ -6,8 +6,6 @@ import time
 from aws_utils import sqs, iam, logs
 import re
 
-iam.get_aws_credentials(st.secrets["aws_credentials"])
-
 
 def transform_sns_messages(messages):
     all_messages = []
@@ -128,6 +126,7 @@ def wait_for_data():
 
 
 def main():
+    iam.get_aws_credentials(st.secrets["aws_credentials"])
     st.title("Custom Search")
     project = "greenmotion"
     bucket_name = f"{project}-bucket-{os.environ['AWS_ACCOUNT_ID']}"
