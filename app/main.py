@@ -3,7 +3,13 @@ import data_viewer
 import custom_search
 import custom_search_logs
 
-st.set_page_config(layout="wide")
+st.set_page_config(
+    layout="wide",
+    initial_sidebar_state="expanded",
+    page_title="Car Rental Data Tool",
+    page_icon="🚗",
+    theme="light",
+)
 
 
 def login():
