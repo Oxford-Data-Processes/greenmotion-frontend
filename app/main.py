@@ -10,6 +10,20 @@ st.set_page_config(
     page_icon="🚗",
 )
 
+st.markdown(
+    """
+    <style>
+    .reportview-container {
+        background: white;
+    }
+    .sidebar .sidebar-content {
+        background: white;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 
 def login():
     st.title("Login")
