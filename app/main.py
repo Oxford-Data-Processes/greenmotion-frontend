@@ -2,6 +2,7 @@ import streamlit as st
 import data_viewer
 import custom_search
 import custom_search_logs
+import market_insights
 
 st.set_page_config(
     layout="wide",
@@ -36,7 +37,7 @@ def main():
     else:
         st.sidebar.title("Car Rental Data Tool")
         selection = st.sidebar.radio(
-            "Select an option:", ["Data Viewer", "Custom Search", "Custom Search Logs"]
+            "Select an option:", ["Data Viewer", "Custom Search", "Custom Search Logs", "Market Insights"]
         )
 
         if selection == "Data Viewer":
@@ -45,6 +46,8 @@ def main():
             custom_search.main()
         elif selection == "Custom Search Logs":
             custom_search_logs.main()
+        elif selection == "Market Insights":
+            market_insights.main()
 
 
 if __name__ == "__main__":
