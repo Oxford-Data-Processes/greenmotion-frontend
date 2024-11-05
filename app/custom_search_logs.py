@@ -13,7 +13,7 @@ def main():
     logs_handler = logs.LogsHandler()
     log_messages = logs_handler.get_logs(bucket_name, "frontend")
     log_df = pd.DataFrame(log_messages)
-    st.dataframe(log_df.iloc[:, 1:], use_container_width=True)
+    st.dataframe(log_df, use_container_width=True)
 
 
 if __name__ == "__main__":
