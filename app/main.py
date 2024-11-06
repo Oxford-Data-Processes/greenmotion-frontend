@@ -47,7 +47,7 @@ def main():
         st.sidebar.title("Car Rental Data Tool")
         selection = st.sidebar.radio(
             "Select an option:", 
-            ["Data Viewer", "Custom Search", "Custom Search Logs", "Market Analysis"]
+            ["Data Viewer", "Custom Search", "Custom Search Logs", "Market Analysis (Beta)"]
         )
 
         if selection == "Data Viewer":
@@ -56,7 +56,7 @@ def main():
             custom_search.main()
         elif selection == "Custom Search Logs":
             custom_search_logs.main()
-        elif selection == "Market Analysis":
+        elif selection == "Market Analysis (Beta)":
             market_analysis.main()
 
 
