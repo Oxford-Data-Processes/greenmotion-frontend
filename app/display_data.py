@@ -10,7 +10,7 @@ def display_data_availability(df, search_type=None, search_params=None):
             title += f" for Market Analysis (From: {search_params['start_date']}, To: {search_params['end_date']})"
         elif search_type == "Scheduled":
             title += f" for Scheduled Search (Date: {search_params['date']}, Time: {search_params['time']})"
-        else:
+        elif search_type == "Custom":
             title += f" for Custom Search (Pickup: {search_params['pickup']}, Dropoff: {search_params['dropoff']})"
     
     st.subheader(title)
