@@ -4,10 +4,28 @@ from data_viewer import load_data
 import pandas as pd
 
 @st.cache_data(ttl=3600)
-def load_historical_data(days=10):
+def load_historical_data(days=14):
     """Load historical market data"""
     dates_to_fetch = generate_dates_to_fetch(days)
-    return batch_process_dates(dates_to_fetch)
+    data = batch_process_dates(dates_to_fetch)
+    
+    # Get date range for title
+    if not data.empty:
+        # Convert to integers before creating datetime objects
+        start_datetime = datetime(
+            year=int(data['year'].min()),
+            month=int(data['month'].min()),
+            day=int(data['day'].min()),
+            hour=int(data['hour'].min())
+        )
+        end_datetime = datetime(
+            year=int(data['year'].max()),
+            month=int(data['month'].max()),
+            day=int(data['day'].max()),
+            hour=int(data['hour'].max())
+        )
+    
+    return data
 
 def generate_dates_to_fetch(days):
     """Generate list of dates to fetch data for"""
@@ -16,7 +34,7 @@ def generate_dates_to_fetch(days):
     current_date = end_date - timedelta(days=days)
     
     while current_date <= end_date:
-        for hour in [17]:
+        for hour in [12]:
             dates.append(f"{current_date.strftime('%Y-%m-%d')}T{hour:02d}:00:00")
         current_date += timedelta(days=1)
     return dates

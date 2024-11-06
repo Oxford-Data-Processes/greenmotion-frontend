@@ -25,10 +25,28 @@ def main():
         st.error("No data available for analysis")
         return
         
-    # Display data availability
+    # Get date range from data
+    start_datetime = datetime(
+        year=int(df['year'].min()),
+        month=int(df['month'].min()),
+        day=int(df['day'].min()),
+        hour=int(df['hour'].min())
+    )
+    end_datetime = datetime(
+        year=int(df['year'].max()),
+        month=int(df['month'].max()),
+        day=int(df['day'].max()),
+        hour=int(df['hour'].max())
+    )
+    
+    # Display data availability with market analysis parameters
     display_data.display_data_availability(
-        df, "Scheduled", 
-        {"date": datetime.now().strftime("%Y-%m-%d"), "time": "17:00:00"}
+        df, 
+        "Market Analysis",
+        {
+            "start_date": start_datetime.strftime("%Y-%m-%d %H:%M"),
+            "end_date": end_datetime.strftime("%Y-%m-%d %H:%M")
+        }
     )
     
     # Create tabs
