@@ -89,7 +89,7 @@ def create_forecast_chart(df):
     ))
     
     fig.update_layout(
-        title='14-Day Price Forecast',
+        title='30-Day Price Forecast',
         xaxis_title='Date',
         yaxis_title='Price (£)',
         height=500,
