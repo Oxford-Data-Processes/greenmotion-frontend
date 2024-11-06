@@ -4,7 +4,7 @@ from data_viewer import load_data
 import pandas as pd
 
 @st.cache_data(ttl=3600)
-def load_historical_data(days=14):
+def load_historical_data(days=30):
     """Load historical market data"""
     dates_to_fetch = generate_dates_to_fetch(days)
     data = batch_process_dates(dates_to_fetch)
