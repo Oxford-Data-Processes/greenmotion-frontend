@@ -1,6 +1,6 @@
 import requests
 
-BASE_URL = "https://zhjlsusdz3.execute-api.eu-west-2.amazonaws.com/dev/"
+BASE_URL = "https://zhjlsusdz3.execute-api.eu-west-2.amazonaws.com/prod/"
 
 # BASE_URL = "http://localhost:8000/"
 
