@@ -62,19 +62,38 @@ def load_data(search_datetime, pickup_datetime, dropoff_datetime, is_custom_sear
             formatted_dropoff = dropoff_datetime.replace(" ", "T") if " " in dropoff_datetime else dropoff_datetime
             
             api_url = f"/items/?table_name={site_name}&pickup_datetime={formatted_pickup}:00&dropoff_datetime={formatted_dropoff}:00&limit=10000"
+            print(f"Debug - Custom Search API URL: {api_url}")
             json_data = api_utils.get_request(api_url)
+            
+            if json_data:
+                # Convert rental_period to numeric if it's 'custom'
+                for item in json_data:
+                    if item.get('rental_period') == 'custom':
+                        # Calculate rental period from pickup and dropoff dates
+                        pickup = datetime.strptime(item['pickup_datetime'], '%Y-%m-%dT%H:%M:%S')
+                        dropoff = datetime.strptime(item['dropoff_datetime'], '%Y-%m-%dT%H:%M:%S')
+                        item['rental_period'] = (dropoff - pickup).days
+                
+                df = convert_json_to_df(json_data)
+                if not df.empty:
+                    # Ensure rental_period is numeric
+                    df['rental_period'] = pd.to_numeric(df['rental_period'], errors='coerce')
+                    dataframes.append(df)
         else:
             formatted_search = search_datetime.replace(" ", "T") if " " in search_datetime else search_datetime
             api_url = f"/items/?table_name={site_name}&search_datetime={formatted_search}:00&limit=10000"
             json_data = api_utils.get_request(api_url)
             
-        if json_data:
-            df = convert_json_to_df(json_data)
-            if not df.empty:
-                dataframes.append(df)
+            if json_data:
+                df = convert_json_to_df(json_data)
+                if not df.empty:
+                    dataframes.append(df)
 
     if dataframes:
         final_df = pd.concat(dataframes, ignore_index=True)
+        # Clear the session state to ensure fresh data
+        if 'original_df' in st.session_state:
+            del st.session_state.original_df
         return final_df
     return pd.DataFrame()
 
@@ -90,11 +109,40 @@ def load_data_and_display(
 
     if not df.empty:
         st.success("Data loaded successfully")
-        if 'df' not in st.session_state:
-            st.write("Initializing session state with loaded data")
-            st.session_state.df = df.copy()
+        
+        # Clear existing session state
+        if 'df' in st.session_state:
+            del st.session_state.df
+        if 'original_df' in st.session_state:
+            del st.session_state.original_df
+            
+        # Update with new data
+        st.session_state.df = df.copy()
+        st.session_state.original_df = df.copy()
+        
+        # Store search parameters
+        if is_custom_search:
+            st.session_state.search_info = {
+                "type": "Custom",
+                "params": {
+                    "pickup": pickup_datetime,
+                    "dropoff": dropoff_datetime
+                }
+            }
+        else:
+            date, time = search_datetime.split('T')
+            st.session_state.search_info = {
+                "type": "Scheduled",
+                "params": {
+                    "date": date,
+                    "time": time
+                }
+            }
+        
         st.write(f"Session state data shape: {st.session_state.df.shape}")
-        display_data.main(st.session_state.df)
+        display_data.main(st.session_state.df, 
+                         st.session_state.search_info["type"],
+                         st.session_state.search_info["params"])
     else:
         st.warning("No data available for the selected date and time.")
 
@@ -115,10 +163,12 @@ def handle_scheduled_search():
     if st.button("Load data"):
         st.session_state.data_loaded = True
         load_data_and_display(search_datetime)
-
+    
     if 'data_loaded' in st.session_state and st.session_state.data_loaded:
-        if 'df' in st.session_state:
-            display_data.main(st.session_state.df)
+        if 'df' in st.session_state and 'search_info' in st.session_state:
+            display_data.main(st.session_state.df, 
+                            st.session_state.search_info["type"],
+                            st.session_state.search_info["params"])
 
 
 def get_recent_searches():
@@ -172,8 +222,10 @@ def handle_custom_search():
         )
 
     if 'data_loaded' in st.session_state and st.session_state.data_loaded:
-        if 'df' in st.session_state:
-            display_data.main(st.session_state.df)
+        if 'df' in st.session_state and 'search_info' in st.session_state:
+            display_data.main(st.session_state.df,
+                            st.session_state.search_info["type"],
+                            st.session_state.search_info["params"])
 
 
 def main():

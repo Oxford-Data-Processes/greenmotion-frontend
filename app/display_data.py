@@ -1,9 +1,17 @@
 import streamlit as st
 import plotly.graph_objects as go
+from datetime import datetime
 
 
-def display_data_availability(df):
-    st.subheader("Data Availability")
+def display_data_availability(df, search_type=None, search_params=None):
+    title = "Data Availability"
+    if search_type and search_params:
+        if search_type == "Scheduled":
+            title += f" for Scheduled Search (Date: {search_params['date']}, Time: {search_params['time']})"
+        else:
+            title += f" for Custom Search (Pickup: {search_params['pickup']}, Dropoff: {search_params['dropoff']})"
+    
+    st.subheader(title)
     col1, col2, col3 = st.columns(3)
     sources = ["do_you_spain", "holiday_autos", "rental_cars"]
     for i, source in enumerate(sources):
@@ -19,18 +27,26 @@ def display_filters(df):
     if 'original_df' not in st.session_state:
         st.session_state.original_df = df.copy()
     
+    # Generate a unique suffix for this instance
+    if 'filter_instance' not in st.session_state:
+        st.session_state.filter_instance = datetime.now().strftime('%Y%m%d%H%M%S')
+    
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
         rental_periods = ["All"] + sorted(st.session_state.original_df["rental_period"].unique().tolist())
         rental_period = st.selectbox(
-            "Select Rental Period (Days)", options=rental_periods, key="rental_period"
+            "Select Rental Period (Days)", 
+            options=rental_periods, 
+            key=f"rental_period_{st.session_state.search_info['type']}_{st.session_state.filter_instance}"
         )
 
     with col2:
         car_groups = ["All"] + sorted(st.session_state.original_df["car_group"].unique().tolist())
         selected_car_group = st.selectbox(
-            "Select Car Group", options=car_groups, key="car_group"
+            "Select Car Group", 
+            options=car_groups, 
+            key=f"car_group_{st.session_state.search_info['type']}_{st.session_state.filter_instance}"
         )
 
     with col3:
@@ -39,13 +55,15 @@ def display_filters(df):
             "Select Number of Vehicles to Display",
             options=num_vehicles_options,
             index=3,
-            key="num_vehicles",
+            key=f"num_vehicles_{st.session_state.search_info['type']}_{st.session_state.filter_instance}"
         )
 
     with col4:
         unique_sources = ["All"] + st.session_state.original_df["source"].unique().tolist()
         selected_source = st.selectbox(
-            "Select Source", options=unique_sources, key="source"
+            "Select Source", 
+            options=unique_sources, 
+            key=f"source_{st.session_state.search_info['type']}_{st.session_state.filter_instance}"
         )
 
     return rental_period, selected_car_group, num_vehicles, selected_source
@@ -164,11 +182,11 @@ def download_filtered_data(filtered_df):
     )
 
 
-def main(df):
+def main(df, search_type=None, search_params=None):
     if 'df' not in st.session_state or st.session_state.df is None:
         st.session_state.df = df.copy()
     
-    display_data_availability(st.session_state.df)
+    display_data_availability(st.session_state.df, search_type, search_params)
     rental_period, selected_car_group, num_vehicles, selected_source = display_filters(st.session_state.df)
     
     filtered_df = apply_filters(
