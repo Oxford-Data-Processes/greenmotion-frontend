@@ -10,7 +10,6 @@ st.set_page_config(
     page_icon="🚗",
 )
 
-
 def login():
     st.title("Login")
 
