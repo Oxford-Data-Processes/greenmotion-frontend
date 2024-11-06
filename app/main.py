@@ -13,19 +13,27 @@ st.set_page_config(
 
 def login():
     st.title("Login")
+
+    if "logged_in" not in st.session_state:
+        st.session_state["logged_in"] = False
+
+    if st.session_state["logged_in"]:
+        st.success("You are already logged in!")
+        return
+
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
-
     if st.button("Login"):
         if (
             username == st.secrets["login_credentials"]["username"]
             and password == st.secrets["login_credentials"]["password"]
         ):
-            st.session_state.logged_in = True
-            st.success("Login successful!")
-            st.experimental_rerun()
+            st.session_state["logged_in"] = True
+            st.session_state["just_logged_in"] = True  # Set the flag
+            st.rerun()  # Force a rerun to update the UI
         else:
             st.error("Invalid username or password")
+
 
 
 def main():
