@@ -82,17 +82,25 @@ def display_results(df, rental_period, selected_car_group, num_vehicles):
     # Create a copy of the dataframe to avoid modifying the original
     display_df = df.copy()
 
-    if selected_car_group == "All":
-        top_vehicles = (
-            display_df.groupby("car_group")
-            .apply(lambda x: x.nsmallest(3, "total_price"))
-            .reset_index(drop=True)
-        )
-    else:
-        # Only apply num_vehicles filter if it's not "All"
-        if num_vehicles != "All":
-            top_vehicles = display_df.nsmallest(int(num_vehicles), "total_price")
+    # Apply num_vehicles filter first
+    if num_vehicles != "All":
+        n_vehicles = int(num_vehicles)
+        if selected_car_group == "All":
+            # Get top n vehicles per car group
+            top_vehicles = (
+                display_df.groupby("car_group")
+                .apply(lambda x: x.nsmallest(n_vehicles, "total_price"))
+                .reset_index(drop=True)
+            )
         else:
+            # Get top n vehicles for selected car group
+            top_vehicles = display_df.nsmallest(n_vehicles, "total_price")
+    else:
+        if selected_car_group == "All":
+            # Show all vehicles grouped by car group
+            top_vehicles = display_df
+        else:
+            # Show all vehicles for selected car group
             top_vehicles = display_df
 
     top_vehicles = top_vehicles.sort_values(["car_group", "total_price"])

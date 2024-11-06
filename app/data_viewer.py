@@ -6,31 +6,44 @@ import api.utils as api_utils
 from aws_utils import logs, iam
 import os
 import re
+import pytz
 
 
 def select_date(input_label, max_value=True):
     today = datetime.now().date()
-    if max_value:
-        selected_date = st.date_input(
-            label=input_label,
-            value=today,
-            max_value=today,
-        )
-    else:
-        selected_date = st.date_input(label=input_label, value=today)
+    selected_date = st.date_input(
+        label=input_label,
+        value=st.session_state.selected_date,
+        max_value=today,
+    )
     return selected_date
 
 
-def select_time(restricted_times=True, key_suffix=""):
-    if restricted_times:
-        available_times = ["08:00", "12:00", "17:00"]
+def select_time(restricted_times=True, key_suffix="", timezone="UTC"):
+    # Set the timezone
+    tz = pytz.timezone(timezone)
+    now = datetime.now(tz)  # Get the current time in the specified timezone
+    current_date = now.date()
+    current_hour = now.hour
+    available_times = []
+
+    if st.session_state.selected_date < current_date:
+        available_times = ["08:00", "12:00", "17:00"]  # Show all available times for past dates
+    elif st.session_state.selected_date == current_date:
+        # Show only times that are in the past for today
+        available_times = ["08:00"]  # Default to 08:00
+        if current_hour >= 12:
+            available_times.append("12:00")
+        if current_hour >= 17:
+            available_times.append("17:00")
     else:
-        available_times = [f"{hour:02d}:00" for hour in range(6, 22)]
+        available_times = [f"{hour:02d}:00" for hour in range(6, 22)]  # Show all times for future dates
+
     search_time = st.selectbox(
         "Select search time",
         options=available_times,
         index=len(available_times) - 1,
-        key=f"search_time{key_suffix}",
+        key=f"search_time_{key_suffix}",
     )
     return str(search_time.split(":")[0])
 
@@ -87,18 +100,25 @@ def load_data_and_display(
 
 
 def handle_scheduled_search():
+    if 'selected_date' not in st.session_state:
+        st.session_state.selected_date = datetime.now().date()
+
     col1, col2 = st.columns(2)
 
     with col1:
-        selected_date = select_date("Select search date", max_value=True)
+        st.session_state.selected_date = select_date("Select search date", max_value=True)
 
     with col2:
         selected_hour = select_time(restricted_times=True, key_suffix="_scheduled")
-        search_datetime = f"{selected_date}T{selected_hour}:00:00"
+        search_datetime = f"{st.session_state.selected_date}T{selected_hour}:00:00"
 
     if st.button("Load data"):
         st.session_state.data_loaded = True
         load_data_and_display(search_datetime)
+
+    if 'data_loaded' in st.session_state and st.session_state.data_loaded:
+        if 'df' in st.session_state:
+            display_data.main(st.session_state.df)
 
 
 def get_recent_searches():
@@ -160,7 +180,7 @@ def main():
     iam.get_aws_credentials(st.secrets["aws_credentials"])  # Add AWS credentials initialization
     st.title("Data Viewer")
 
-    search_type = st.radio("Search type", options=["Custom", "Scheduled"])
+    search_type = st.radio("Search type", options=["Scheduled", "Custom"])
 
     if search_type == "Scheduled":
         handle_scheduled_search()

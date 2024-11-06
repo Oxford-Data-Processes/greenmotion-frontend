@@ -37,30 +37,76 @@ def select_time(label, restricted_times=True, key_suffix=""):
 
 
 def select_date_range():
-    today = datetime.now().date()
-    default_pickup_date = today + timedelta(days=1)
+    # Get current datetime and set defaults (3 days from now at 10:00)
+    now = datetime.now()
+    default_pickup_date = now.date() + timedelta(days=3)
     default_dropoff_date = default_pickup_date + timedelta(days=3)
+    default_time = "10:00"
 
     col1, col2, col3, col4 = st.columns(4)
+    
     with col1:
-        pickup_date = st.date_input("Pick-up Date", value=default_pickup_date).strftime(
-            "%Y-%m-%d"
+        pickup_date = st.date_input(
+            "Pick-up Date",
+            value=default_pickup_date,
+            min_value=now.date(),
+            key="pickup_date"
         )
+    
     with col2:
-        pickup_time = select_time(
-            "Pick-up Time", restricted_times=False, key_suffix="pickup"
+        pickup_time = st.selectbox(
+            "Pick-up Time",
+            options=[f"{hour:02d}:00" for hour in range(6, 22)],
+            index=[i for i, t in enumerate([f"{hour:02d}:00" for hour in range(6, 22)]) if t == default_time][0],
+            key="pickup_time"
         )
+    
+    # Only adjust dropoff date if pickup date would make it invalid
+    if 'dropoff_date' not in st.session_state:
+        dropoff_value = default_dropoff_date
+    else:
+        current_dropoff = st.session_state.dropoff_date
+        if pickup_date >= current_dropoff:
+            dropoff_value = pickup_date + timedelta(days=3)
+        else:
+            dropoff_value = current_dropoff
+    
     with col3:
         dropoff_date = st.date_input(
-            "Drop-off Date", value=default_dropoff_date
-        ).strftime("%Y-%m-%d")
+            "Drop-off Date",
+            value=dropoff_value,
+            min_value=pickup_date,
+            key="dropoff_date"
+        )
+    
     with col4:
-        dropoff_time = select_time(
-            "Drop-off Time", restricted_times=False, key_suffix="dropoff"
+        dropoff_time = st.selectbox(
+            "Drop-off Time",
+            options=[f"{hour:02d}:00" for hour in range(6, 22)],
+            index=[i for i, t in enumerate([f"{hour:02d}:00" for hour in range(6, 22)]) if t == default_time][0],
+            key="dropoff_time"
         )
 
-    pickup_datetime = f"{pickup_date}T{pickup_time}:00"
-    dropoff_datetime = f"{dropoff_date}T{dropoff_time}:00"
+    # Create datetime objects for validation
+    pickup_datetime_obj = datetime.combine(pickup_date, datetime.strptime(pickup_time, "%H:%M").time())
+    dropoff_datetime_obj = datetime.combine(dropoff_date, datetime.strptime(dropoff_time, "%H:%M").time())
+    
+    # Calculate rental period
+    rental_period = (dropoff_datetime_obj - pickup_datetime_obj).days
+    st.info(f"Rental Period: {rental_period} days")
+    
+    # Validate dates and times
+    if pickup_datetime_obj < now:
+        st.error("Pick-up date and time cannot be in the past")
+        return None, None
+        
+    if dropoff_datetime_obj <= pickup_datetime_obj:
+        st.error("Drop-off date and time must be after pick-up date and time")
+        return None, None
+
+    # Format datetimes for API
+    pickup_datetime = f"{pickup_date}T{pickup_time}"
+    dropoff_datetime = f"{dropoff_date}T{dropoff_time}"
 
     return pickup_datetime, dropoff_datetime
 
