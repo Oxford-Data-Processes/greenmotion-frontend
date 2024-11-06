@@ -2,4 +2,5 @@ fastapi
 uvicorn
 streamlit
 plotly
+prophet
 git+https://github.com/Oxford-Data-Processes/aws-utils.git
