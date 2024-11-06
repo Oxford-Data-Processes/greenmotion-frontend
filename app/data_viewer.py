@@ -137,10 +137,6 @@ def load_data_and_display(
                     "time": time
                 }
             }
-        
-        display_data.main(st.session_state.df, 
-                         st.session_state.search_info["type"],
-                         st.session_state.search_info["params"])
     else:
         st.warning("No data available for the selected date and time.")
 
@@ -160,11 +156,40 @@ def handle_scheduled_search():
 
     if st.button("Load data"):
         st.session_state.data_loaded = True
-        load_data_and_display(search_datetime)
-    
+        # Instead of calling load_data_and_display, we'll load the data directly
+        with st.spinner("Loading data..."):
+            df = load_data(search_datetime, None, None, False)
+            
+            if not df.empty:
+                st.success("Data loaded successfully")
+                
+                # Clear existing session state
+                if 'df' in st.session_state:
+                    del st.session_state.df
+                if 'original_df' in st.session_state:
+                    del st.session_state.original_df
+                    
+                # Update with new data
+                st.session_state.df = df.copy()
+                st.session_state.original_df = df.copy()
+                
+                # Store search parameters
+                date, time = search_datetime.split('T')
+                st.session_state.search_info = {
+                    "type": "Scheduled",
+                    "params": {
+                        "date": date,
+                        "time": time
+                    }
+                }
+            else:
+                st.warning("No data available for the selected date and time.")
+                return
+
+    # Only display data once after loading or when filters are applied
     if 'data_loaded' in st.session_state and st.session_state.data_loaded:
         if 'df' in st.session_state and 'search_info' in st.session_state:
-            display_data.main(st.session_state.df, 
+            display_data.main(st.session_state.df,
                             st.session_state.search_info["type"],
                             st.session_state.search_info["params"])
 
