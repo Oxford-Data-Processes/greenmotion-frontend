@@ -23,6 +23,7 @@ def login():
         ):
             st.session_state.logged_in = True
             st.success("Login successful!")
+            st.experimental_rerun()
         else:
             st.error("Invalid username or password")
 
