@@ -165,7 +165,7 @@ def wait_for_data():
                 rental_cars_found = True
                 break
         if not rental_cars_found:
-            time.sleep(5)
+            time.sleep(2)
 
     warning_placeholder.empty()
     st.success("Custom search complete.")
@@ -174,6 +174,13 @@ def wait_for_data():
 def main():
     iam.get_aws_credentials(st.secrets["aws_credentials"])
     st.title("Custom Search")
+    
+    # Add prominent warning at the top
+    st.warning("""
+        ⚠️ IMPORTANT: Please remain on this page until the search is complete.
+        The process may take a few minutes. You will see a success message when it's done.
+    """)
+    
     project = "greenmotion"
     bucket_name = f"{project}-bucket-{os.environ['AWS_ACCOUNT_ID']}"
     location = "manchester"
@@ -183,25 +190,58 @@ def main():
     pickup_datetime, dropoff_datetime = select_date_range()
 
     if st.button("Trigger Custom Search"):
+        # Create a placeholder for the progress messages
+        progress_placeholder = st.empty()
+        
         with st.spinner("Loading data..."):
             site_names = [
                 "do_you_spain",
                 "holiday_autos",
                 "rental_cars",
             ]
+            
+            progress_placeholder.info("""
+                🔄 Search initiated! Please do not close or leave this page.
+                
+                Current status:
+                - Triggering searches for multiple sites
+                - Waiting for data collection
+                - This process typically takes 2-3 minutes
+            """)
+            
             for site_name in site_names:
                 trigger_workflow(location, site_name, pickup_datetime, dropoff_datetime)
 
-        st.success(
-            f"Successfully triggered custom search with the following parameters: Pickup datetime: {pickup_datetime} | Dropoff datetime: {dropoff_datetime}"
-        )
         logs_handler.log_action(
             bucket_name,
             "frontend",
             f"CUSTOM_SEARCH_TRIGGERED | pickup_datetime={pickup_datetime} | dropoff_datetime={dropoff_datetime}",
             "user_1",
         )
+        
+        # Update progress message
+        progress_placeholder.info("""
+            🔄 Searches triggered successfully!
+            
+            Current status:
+            - Waiting for data collection
+            - Please remain on this page
+            - You will see a success message when complete
+        """)
+        
         wait_for_data()
+        
+        # Clear the progress messages
+        progress_placeholder.empty()
+        
+        # Show final success message
+        st.success("""
+            ✅ Custom search complete! 
+            
+            All data has been collected successfully.
+            You can now proceed to the Data Viewer to see the results.
+        """)
+        
         logs_handler.log_action(
             bucket_name,
             "frontend",

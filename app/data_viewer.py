@@ -105,7 +105,6 @@ def load_data_and_display(
         df = load_data(
             search_datetime, pickup_datetime, dropoff_datetime, is_custom_search
         )
-        st.write(f"Loaded data shape: {df.shape}")
 
     if not df.empty:
         st.success("Data loaded successfully")
@@ -139,7 +138,6 @@ def load_data_and_display(
                 }
             }
         
-        st.write(f"Session state data shape: {st.session_state.df.shape}")
         display_data.main(st.session_state.df, 
                          st.session_state.search_info["type"],
                          st.session_state.search_info["params"])
