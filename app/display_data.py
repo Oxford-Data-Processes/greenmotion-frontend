@@ -16,16 +16,19 @@ def display_data_availability(df):
 
 
 def display_filters(df):
+    if 'original_df' not in st.session_state:
+        st.session_state.original_df = df.copy()
+    
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        rental_periods = ["All"] + sorted(df["rental_period"].unique().tolist())
+        rental_periods = ["All"] + sorted(st.session_state.original_df["rental_period"].unique().tolist())
         rental_period = st.selectbox(
             "Select Rental Period (Days)", options=rental_periods, key="rental_period"
         )
 
     with col2:
-        car_groups = ["All"] + sorted(df["car_group"].unique().tolist())
+        car_groups = ["All"] + sorted(st.session_state.original_df["car_group"].unique().tolist())
         selected_car_group = st.selectbox(
             "Select Car Group", options=car_groups, key="car_group"
         )
@@ -40,7 +43,7 @@ def display_filters(df):
         )
 
     with col4:
-        unique_sources = ["All"] + df["source"].unique().tolist()
+        unique_sources = ["All"] + st.session_state.original_df["source"].unique().tolist()
         selected_source = st.selectbox(
             "Select Source", options=unique_sources, key="source"
         )
@@ -49,7 +52,10 @@ def display_filters(df):
 
 
 def apply_filters(df, rental_period, selected_car_group, selected_source):
-    filtered_df = df.copy()
+    if 'original_df' not in st.session_state:
+        return df
+        
+    filtered_df = st.session_state.original_df.copy()
 
     if rental_period != "All":
         filtered_df = filtered_df[filtered_df["rental_period"] == int(rental_period)]
@@ -66,21 +72,28 @@ def apply_filters(df, rental_period, selected_car_group, selected_source):
 
 
 def display_results(df, rental_period, selected_car_group, num_vehicles):
-    st.subheader("Top Cheapest Vehicles")
+    # Create dynamic title
+    num_vehicles_text = str(num_vehicles) if num_vehicles != "All" else "All"
+    car_group_text = f"in {selected_car_group}" if selected_car_group != "All" else "across All Car Groups"
+    rental_period_text = f"for {rental_period} Day Rental" if rental_period != "All" else "for All Rental Periods"
+    
+    st.subheader(f"Top {num_vehicles_text} Cheapest Vehicles {car_group_text} {rental_period_text}")
+    
+    # Create a copy of the dataframe to avoid modifying the original
+    display_df = df.copy()
 
     if selected_car_group == "All":
         top_vehicles = (
-            df.groupby("car_group")
+            display_df.groupby("car_group")
             .apply(lambda x: x.nsmallest(3, "total_price"))
             .reset_index(drop=True)
         )
     else:
-        if num_vehicles == "All":
-            top_vehicles = df[df["car_group"] == selected_car_group]
+        # Only apply num_vehicles filter if it's not "All"
+        if num_vehicles != "All":
+            top_vehicles = display_df.nsmallest(int(num_vehicles), "total_price")
         else:
-            top_vehicles = df[df["car_group"] == selected_car_group].nsmallest(
-                int(num_vehicles), "total_price"
-            )
+            top_vehicles = display_df
 
     top_vehicles = top_vehicles.sort_values(["car_group", "total_price"])
     display_df = remove_internal_columns(top_vehicles)
@@ -144,16 +157,21 @@ def download_filtered_data(filtered_df):
 
 
 def main(df):
-    display_data_availability(df)
-    rental_period, selected_car_group, num_vehicles, selected_source = display_filters(
-        df
-    )
+    if 'df' not in st.session_state or st.session_state.df is None:
+        st.session_state.df = df.copy()
+    
+    display_data_availability(st.session_state.df)
+    rental_period, selected_car_group, num_vehicles, selected_source = display_filters(st.session_state.df)
+    
     filtered_df = apply_filters(
-        df,
+        st.session_state.df,
         rental_period,
         selected_car_group,
         selected_source,
     )
 
-    display_results(filtered_df, rental_period, selected_car_group, num_vehicles)
-    download_filtered_data(filtered_df)
+    if not filtered_df.empty:
+        display_results(filtered_df, rental_period, selected_car_group, num_vehicles)
+        download_filtered_data(filtered_df)
+    else:
+        st.warning("No data available for the selected filters.")
