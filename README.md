@@ -1,15 +1,13 @@
 # greenmotion-frontend
 
-TECH DEBT:
+TODO:
+- Set the location based on the username at login (eg. manchester, london, etc.)
+- Test for multiple locations
+- Create a log that gets all the custom searches that have been run (filtering dataframe???)
 
-- Data processing/cleaning should be done in the backend
-- UI should be improved, using left hand menu instead of tabs
-- Each feature should be separated into a different module
-- Custom Date Range and Search by Date should be almost identical in terms of code
-- Should be easy to implement a new location in the backend
-- Create a way for multiple people to run the custom date range search at the same time, view a "status" page for all searches
-- Create a tab explaining when the schedule workflows will run
-- Add mypy and pylint
-- Add unit and integration tests
+Commands:
 
-
+uvicorn app.v2.api.mock:app --reload
+ps aux | grep uvicorn
+kill -9 <PID>
+streamlit run app/main.py

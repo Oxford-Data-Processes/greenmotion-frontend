@@ -1,2 +1,5 @@
+fastapi
+uvicorn
+streamlit
 plotly
 git+https://github.com/Oxford-Data-Processes/aws-utils.git
