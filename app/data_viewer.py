@@ -91,9 +91,6 @@ def load_data(search_datetime, pickup_datetime, dropoff_datetime, is_custom_sear
 
     if dataframes:
         final_df = pd.concat(dataframes, ignore_index=True)
-        # Clear the session state to ensure fresh data
-        if 'original_df' in st.session_state:
-            del st.session_state.original_df
         return final_df
     return pd.DataFrame()
 
