@@ -46,18 +46,18 @@ def main():
         selection = st.sidebar.radio(
             "Select an option:", 
             ["Data Viewer", 
-             "Pricing Strategy",  # Moved Pricing Strategy above Custom Search Logs
              "Custom Search", 
+             "Pricing Strategy",  # Moved Pricing Strategy below Custom Search
              "Custom Search Logs", 
              "Market Analysis (Beta)"]
         )
 
         if selection == "Data Viewer":
             data_viewer.main()
-        elif selection == "Pricing Strategy":  # Adjusted the order of the conditions
-            pricing_strategy.main()
         elif selection == "Custom Search":
             custom_search.main()
+        elif selection == "Pricing Strategy":  # Adjusted the order of the conditions
+            pricing_strategy.main()
         elif selection == "Custom Search Logs":
             custom_search_logs.main()
         elif selection == "Market Analysis (Beta)":
