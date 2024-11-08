@@ -4,36 +4,32 @@ from datetime import datetime
 from .pricing_calculations import calculate_suggested_price
 
 def render_matrix_view(df):
-    selected_sources = render_source_filter(df)
-    desired_position, handle_ties = render_position_controls(df)
-    
-    matrix_df, cell_colors = create_matrix(df, selected_sources, desired_position - 1, handle_ties)
-    display_matrix(matrix_df, cell_colors)
-    add_export_button(matrix_df)
-
-def render_source_filter(df):
+    # Data source filter in its own row
     sources = sorted(df['source'].unique())
-    return st.multiselect(
+    selected_sources = st.multiselect(
         "Select Data Sources",
         options=sources,
         default=sources,
         key="matrix_pricing_sources"
     )
-
-def render_position_controls(df):
+    
+    # Position controls in row below
     col1, col2 = st.columns(2)
     
     with col1:
         if 'matrix_desired_position' not in st.session_state:
-            st.session_state.matrix_desired_position = 3
+            st.session_state.matrix_desired_position = 4
             
-        desired_position = st.number_input(
+        display_position = st.number_input(
             "Desired Market Position (1 = cheapest)",
             min_value=1,
             max_value=len(df),
             value=st.session_state.matrix_desired_position,
             key="matrix_desired_position"
         )
+        
+        # Adjust the internal position to match detailed view
+        desired_position = display_position - 2
     
     with col2:
         handle_ties = st.checkbox(
@@ -43,14 +39,17 @@ def render_position_controls(df):
             key="matrix_handle_ties"
         )
     
-    return desired_position, handle_ties
-
-def create_matrix(df, selected_sources, desired_position, handle_ties):
+    # Filter data by sources
     filtered_df = df[df['source'].isin(selected_sources)]
-    car_groups = sorted(filtered_df['car_group'].unique())
-    rental_periods = sorted(filtered_df['rental_period'].unique())
     
-    return build_matrix_data(filtered_df, car_groups, rental_periods, desired_position, handle_ties)
+    # Create and display matrix
+    matrix_df, cell_colors = build_matrix_data(filtered_df, 
+                                             sorted(filtered_df['car_group'].unique()),
+                                             sorted(filtered_df['rental_period'].unique()),
+                                             desired_position,  # Pass the adjusted position
+                                             handle_ties)
+    display_matrix(matrix_df, cell_colors)
+    add_export_button(matrix_df)
 
 def add_export_button(matrix_df):
     if st.button("Export to CSV"):
@@ -81,11 +80,11 @@ def display_matrix(matrix_df, cell_colors):
 
 def build_matrix_data(filtered_df, car_groups, rental_periods, desired_position, handle_ties):
     matrix_data = []
-    cell_colors = []  # Track which cells should be green
+    cell_colors = []
     
     for car_group in car_groups:
         row_data = {'Car Group': car_group}
-        row_colors = ['white'] * (len(rental_periods) + 1)  # +1 for Car Group column
+        row_colors = ['white'] * (len(rental_periods) + 1)
         
         for i, period in enumerate(rental_periods, 1):
             period_data = filtered_df[
@@ -93,12 +92,14 @@ def build_matrix_data(filtered_df, car_groups, rental_periods, desired_position,
                 (filtered_df['rental_period'] == period)
             ]
             if not period_data.empty:
-                # Get Green Motion entries
+                # Use the same calculation logic as detailed view
+                suggested_price = calculate_suggested_price(period_data, desired_position, handle_ties)
+                
+                # Check if Green Motion is in correct position using same logic as detailed view
                 green_motion_entries = period_data[
                     period_data['supplier'].str.contains('GREEN MOTION', case=False, na=False)
                 ]
                 
-                # Check if Green Motion is in correct position
                 is_correct_position = False
                 sorted_data = period_data.sort_values('total_price')
                 
@@ -107,15 +108,17 @@ def build_matrix_data(filtered_df, car_groups, rental_periods, desired_position,
                         unique_prices = sorted(sorted_data['total_price'].unique())
                         price_to_rank = {price: idx for idx, price in enumerate(unique_prices)}
                         green_motion_ranks = green_motion_entries['total_price'].map(price_to_rank)
-                        is_correct_position = any(rank in [desired_position, desired_position + 1] for rank in green_motion_ranks)
+                        is_correct_position = any(rank in [desired_position, desired_position + 1] 
+                                               for rank in green_motion_ranks)
                     else:
                         green_motion_indices = sorted_data[
                             sorted_data['supplier'].str.contains('GREEN MOTION', case=False, na=False)
                         ].index
-                        green_motion_ranks = [sorted_data.index.get_loc(idx) for idx in green_motion_indices]
-                        is_correct_position = any(rank in [desired_position, desired_position + 1] for rank in green_motion_ranks)
+                        green_motion_ranks = [sorted_data.index.get_loc(idx) 
+                                           for idx in green_motion_indices]
+                        is_correct_position = any(rank in [desired_position, desired_position + 1] 
+                                               for rank in green_motion_ranks)
                 
-                suggested_price = calculate_suggested_price(period_data, desired_position, handle_ties)
                 price_text = f"£{suggested_price:.2f}"
                 if is_correct_position:
                     row_colors[i] = 'lightgreen'
