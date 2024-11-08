@@ -92,14 +92,12 @@ def build_matrix_data(filtered_df, car_groups, rental_periods, desired_position,
                 (filtered_df['rental_period'] == period)
             ]
             if not period_data.empty:
-                # Use the same calculation logic as detailed view
-                suggested_price = calculate_suggested_price(period_data, desired_position, handle_ties)
-                
-                # Check if Green Motion is in correct position using same logic as detailed view
+                # Get Green Motion entries
                 green_motion_entries = period_data[
                     period_data['supplier'].str.contains('GREEN MOTION', case=False, na=False)
                 ]
                 
+                # Check if Green Motion is in correct position
                 is_correct_position = False
                 sorted_data = period_data.sort_values('total_price')
                 
@@ -119,12 +117,15 @@ def build_matrix_data(filtered_df, car_groups, rental_periods, desired_position,
                         is_correct_position = any(rank in [desired_position, desired_position + 1] 
                                                for rank in green_motion_ranks)
                 
-                price_text = f"£{suggested_price:.2f}"
                 if is_correct_position:
+                    # Show the actual Green Motion price when in correct position
+                    green_motion_price = green_motion_entries['total_price'].iloc[0]
                     row_colors[i] = 'lightgreen'
-                    price_text = f"✅ {price_text}"
-                
-                row_data[f'{period} Days'] = price_text
+                    row_data[f'{period} Days'] = f"✅ £{green_motion_price:.2f}"
+                else:
+                    # Show suggested price when not in correct position
+                    suggested_price = calculate_suggested_price(period_data, desired_position, handle_ties)
+                    row_data[f'{period} Days'] = f"£{suggested_price:.2f}"
             else:
                 row_data[f'{period} Days'] = "N/A"
                 
