@@ -20,7 +20,19 @@ def format_search_datetime(search_datetime):
 
 def fetch_data(site_name, formatted_search):
     api_url = f"/items/?table_name={site_name}&search_datetime={formatted_search}:00&limit=10000"
-    return api_utils.get_request(api_url)
+    response = api_utils.get_request(api_url)
+    
+    # Add logging to debug the response
+    if not response:
+        print(f"Warning: Empty response for {site_name} at {formatted_search}")
+        return None
+        
+    try:
+        return response
+    except ValueError as e:
+        print(f"Error parsing JSON for {site_name} at {formatted_search}: {str(e)}")
+        print(f"Raw response: {response}")
+        return None
 
 def process_data(json_data, site_name):
     df = pd.DataFrame(json_data)
