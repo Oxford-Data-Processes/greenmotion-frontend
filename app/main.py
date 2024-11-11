@@ -1,9 +1,13 @@
 import streamlit as st
+import pandas as pd
+from datetime import datetime, timedelta
 import data_viewer
 import custom_search
 import custom_search_logs
 import market_analysis
 import pricing_strategy
+from components.ai import render_ai_chat
+from utils.data_loader import load_latest_data, load_historical_data
 
 st.set_page_config(
     layout="wide",
@@ -30,10 +34,29 @@ def login():
             and password == st.secrets["login_credentials"]["password"]
         ):
             st.session_state["logged_in"] = True
-            st.session_state["just_logged_in"] = True  # Set the flag
-            st.rerun()  # Force a rerun to update the UI
+            st.session_state["just_logged_in"] = True
+            st.rerun()
         else:
             st.error("Invalid username or password")
+
+def load_ai_data():
+    """Load data for AI analysis"""
+    try:
+        # Try to load the most recent data
+        search_datetime = datetime.now().strftime("%Y-%m-%dT%H:00:00")
+        df = load_latest_data(search_datetime)
+        
+        if df.empty:
+            # If no data for current time, try loading historical data
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=7)
+            
+            df = load_historical_data(start_date, end_date)
+        
+        return df
+    except Exception as e:
+        st.error(f"Error loading data: {str(e)}")
+        return pd.DataFrame()
 
 def main():
     if "logged_in" not in st.session_state:
@@ -45,18 +68,36 @@ def main():
         st.sidebar.title("Car Rental Data Tool")
         selection = st.sidebar.radio(
             "Select an option:", 
-            ["Data Viewer", 
-             "Custom Search", 
-             "Pricing Strategy",  # Moved Pricing Strategy below Custom Search
-             "Custom Search Logs", 
-             "Market Analysis (Beta)"]
+            [
+                "AI Market Assistant",
+                "Data Viewer", 
+                "Custom Search", 
+                "Pricing Strategy",
+                "Custom Search Logs", 
+                "Market Analysis (Beta)"
+            ]
         )
 
-        if selection == "Data Viewer":
+        if selection == "AI Market Assistant":
+            with st.spinner("Loading market data for AI analysis..."):
+                df = load_ai_data()
+                
+                if df.empty:
+                    st.error("""
+                        No data available for AI analysis. 
+                        Please ensure you have run a recent data collection 
+                        or try the Custom Search feature first.
+                    """)
+                    
+                    if st.button("Run Custom Search"):
+                        st.switch_page("pages/custom_search.py")
+                else:
+                    render_ai_chat(df)
+        elif selection == "Data Viewer":
             data_viewer.main()
         elif selection == "Custom Search":
             custom_search.main()
-        elif selection == "Pricing Strategy":  # Adjusted the order of the conditions
+        elif selection == "Pricing Strategy":
             pricing_strategy.main()
         elif selection == "Custom Search Logs":
             custom_search_logs.main()
