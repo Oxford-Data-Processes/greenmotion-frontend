@@ -92,49 +92,22 @@ def format_search_datetime(search_datetime):
     return search_datetime.strftime('%Y-%m-%dT%H:%M:%S')
 
 def fetch_data(site_name, formatted_search):
-    """Fetch data from API"""
+    api_url = f"/items/?table_name={site_name}&search_datetime={formatted_search}:00&limit=10000"
+    response = api_utils.get_request(api_url)
+    
+    # Add logging to debug the response
+    if not response:
+        print(f"Warning: Empty response for {site_name} at {formatted_search}")
+        return None
+        
     try:
-        # First try the current search datetime
-        api_url = f"/items/?table_name={site_name}&search_datetime={formatted_search}:00&limit=10000"
-        json_data = api_utils.get_request(api_url)
-        
-        # If no data, try the last 7 days
-        if not json_data:
-            end_date = datetime.now()
-            start_date = end_date - timedelta(days=7)
-            
-            api_url = (
-                f"/items/?table_name={site_name}"
-                f"&start_date={start_date.strftime('%Y-%m-%dT%H:%M:%S')}:00"
-                f"&end_date={end_date.strftime('%Y-%m-%dT%H:%M:%S')}:00"
-                f"&limit=10000"
-            )
-            json_data = api_utils.get_request(api_url)
-        
-        return json_data
-    except Exception as e:
-        print(f"Error fetching data for {site_name}: {str(e)}")
+        return response
+    except ValueError as e:
+        print(f"Error parsing JSON for {site_name} at {formatted_search}: {str(e)}")
+        print(f"Raw response: {response}")
         return None
 
-def process_data(json_data):
-    """Process JSON data into DataFrame"""
-    if not json_data:
-        return pd.DataFrame()
-    
-    try:
-        df = pd.DataFrame(json_data)
-        
-        # Convert date-related columns
-        if 'pickup_datetime' in df.columns:
-            df['pickup_date'] = pd.to_datetime(df['pickup_datetime']).dt.date
-        
-        # Ensure numeric columns are properly typed
-        numeric_columns = ['total_price', 'rental_period']
-        for col in numeric_columns:
-            if col in df.columns:
-                df[col] = pd.to_numeric(df[col], errors='coerce')
-        
-        return df
-    except Exception as e:
-        print(f"Error processing data: {str(e)}")
-        return pd.DataFrame()
+def process_data(json_data, site_name):
+    df = pd.DataFrame(json_data)
+    df['source'] = site_name
+    return df
