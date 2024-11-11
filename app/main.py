@@ -4,6 +4,9 @@ import custom_search
 import custom_search_logs
 import market_analysis
 import pricing_strategy
+import os
+
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 st.set_page_config(
     layout="wide",

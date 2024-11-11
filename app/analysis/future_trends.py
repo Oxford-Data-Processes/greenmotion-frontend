@@ -13,12 +13,12 @@ def render(df):
     with col2:
         rental_period = select_rental_period(df, key="future")
     
-    filtered_df = df[df['rental_period'] == rental_period]
+    filtered_df = df[df['rental_period'] == rental_period].copy()
     if selected_car_group != 'All':
         filtered_df = filtered_df[filtered_df['car_group'] == selected_car_group]
     
     # Create date column and check for minimum data points
-    filtered_df['date'] = pd.to_datetime(
+    filtered_df.loc[:, 'date'] = pd.to_datetime(
         dict(year=filtered_df['year'], 
              month=filtered_df['month'], 
              day=filtered_df['day'])

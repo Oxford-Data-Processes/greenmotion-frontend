@@ -10,6 +10,8 @@ from analysis import (
     competitor_analysis
 )
 from components.filters import load_historical_data
+from components.ai_pricing import render_ai_pricing
+from components.ai_chat import render_ai_chat
 
 def main():
     st.title("Market Analysis Dashboard")
@@ -55,7 +57,9 @@ def main():
         "Daily Snapshot", 
         "Pace View", 
         "Future Trends (Alpha Testing)",
-        "Competitor Analysis"
+        "Competitor Analysis",
+        "AI Pricing",
+        "AI Chat"
     ])
     
     # Render tabs
@@ -64,7 +68,9 @@ def main():
         daily_snapshot.render,
         pace_view.render,
         future_trends.render,
-        competitor_analysis.render
+        competitor_analysis.render,
+        render_ai_pricing,
+        render_ai_chat
     ]
     
     for tab, func in zip(tabs, tab_functions):
