@@ -7,7 +7,7 @@ import custom_search_logs
 import market_analysis
 import pricing_strategy
 from components.ai import render_ai_chat
-from utils.data_loader import load_latest_data, load_historical_data
+from utils.data_loader import load_latest_data
 
 st.set_page_config(
     layout="wide",
@@ -40,18 +40,49 @@ def login():
             st.error("Invalid username or password")
 
 def load_ai_data():
-    """Load data for AI analysis"""
+    """Load data for AI analysis using only the most recent collection time"""
     try:
-        # Try to load the most recent data
-        search_datetime = datetime.now().strftime("%Y-%m-%dT%H:00:00")
+        # Define the collection hours
+        collection_hours = [8, 12, 17]
+        
+        # Get current datetime
+        now = datetime.now()
+        
+        # Find the most recent collection time
+        current_hour = now.hour
+        most_recent_hour = None
+        
+        for hour in sorted(collection_hours, reverse=True):
+            if current_hour >= hour:
+                most_recent_hour = hour
+                break
+        
+        if most_recent_hour is None:
+            # If current time is before first collection (8:00),
+            # use previous day's last collection (17:00)
+            most_recent_hour = 17
+            now = now - timedelta(days=1)
+        
+        # Format the search datetime
+        search_datetime = now.replace(
+            hour=most_recent_hour,
+            minute=0,
+            second=0,
+            microsecond=0
+        ).strftime("%Y-%m-%dT%H:00:00")
+        
+        st.info(f"Loading data from most recent collection time: {search_datetime}")
+        
         df = load_latest_data(search_datetime)
         
         if df.empty:
-            # If no data for current time, try loading historical data
-            end_date = datetime.now()
-            start_date = end_date - timedelta(days=7)
+            st.error("""
+                No data available for the most recent collection time. 
+                Please try again later or use the Custom Search feature.
+            """)
             
-            df = load_historical_data(start_date, end_date)
+            if st.button("Run Custom Search"):
+                st.switch_page("pages/custom_search.py")
         
         return df
     except Exception as e:
@@ -88,9 +119,6 @@ def main():
                         Please ensure you have run a recent data collection 
                         or try the Custom Search feature first.
                     """)
-                    
-                    if st.button("Run Custom Search"):
-                        st.switch_page("pages/custom_search.py")
                 else:
                     render_ai_chat(df)
         elif selection == "Data Viewer":

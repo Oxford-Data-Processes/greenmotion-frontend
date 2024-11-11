@@ -13,6 +13,12 @@ from .utils import (
 def render_ai_chat(df):
     """Main function to render the AI chat interface"""
     
+    # Load the QA model at the start
+    tokenizer, model = load_qa_model()
+    if tokenizer is None or model is None:
+        st.error("Failed to load AI model. Please try again later.")
+        return
+    
     # Setup the chat interface
     st.title("🤖 AI Rental Market Analyst")
     
@@ -57,85 +63,50 @@ def render_ai_chat(df):
         # Add user message to chat history
         st.session_state.chat_history.append({"role": "user", "content": user_input})
         
-        # Process the query
-        with st.spinner("Analyzing your request..."):
+        try:
+            # Check if it's a visualization request
             if is_visualization_request(user_input):
-                # Handle visualization request
-                fig = generate_visualization(df, user_input)
-                if fig:
-                    response = "Here's the visualization you requested:"
-                    st.session_state.chat_history.append({
-                        "role": "assistant",
-                        "content": response,
-                        "visualization": fig
-                    })
-                else:
-                    response = "I couldn't generate the visualization. Please try being more specific."
-                    st.session_state.chat_history.append({
-                        "role": "assistant",
-                        "content": response
-                    })
+                params = extract_query_parameters(user_input)
+                fig = create_visualization(df, params)
+                response = "Here's the visualization you requested:"
+                st.session_state.chat_history.append({
+                    "role": "assistant",
+                    "content": response,
+                    "visualization": fig
+                })
             else:
-                # Handle text query
-                tokenizer, model = load_qa_model()
-                context = generate_context_from_data(df)
+                # Generate context and get AI response
+                context = generate_context_from_data(df, user_input)
                 response = answer_question(user_input, context, tokenizer, model)
                 st.session_state.chat_history.append({
                     "role": "assistant",
                     "content": response
                 })
-        
-        # Clear the input field
-        st.experimental_rerun()
+        except Exception as e:
+            error_message = f"I apologize, but I encountered an error: {str(e)}"
+            st.session_state.chat_history.append({
+                "role": "assistant",
+                "content": error_message
+            })
 
     # Display chat history
     with chat_container:
         for message in st.session_state.chat_history:
-            with st.chat_message(message["role"]):
-                st.write(message["content"])
+            if message["role"] == "user":
+                st.markdown(f"**You:** {message['content']}")
+            else:
+                st.markdown(f"**AI:** {message['content']}")
                 if "visualization" in message:
                     st.plotly_chart(message["visualization"], use_container_width=True)
 
-def generate_visualization(df, query):
-    """Generate visualizations based on user query"""
-    params = extract_query_parameters(query)
-    
-    if not params:
-        return None
-        
-    filtered_df = filter_data(df, params)
-    
-    if filtered_df.empty:
-        return None
-        
-    # Create visualization based on query type
-    if params['type'] == 'trend':
-        fig = create_trend_visualization(filtered_df, params)
-    elif params['type'] == 'comparison':
-        fig = create_comparison_visualization(filtered_df, params)
+def create_visualization(df, params):
+    """Create visualization based on user request and parameters"""
+    if params.get('type') == 'trend':
+        return create_trend_visualization(df, params)
+    elif params.get('type') == 'comparison':
+        return create_comparison_visualization(df, params)
     else:
-        fig = create_general_visualization(filtered_df, params)
-        
-    return fig
-
-def filter_data(df, params):
-    """Filter DataFrame based on extracted parameters"""
-    filtered_df = df.copy()
-    
-    if params.get('supplier'):
-        filtered_df = filtered_df[filtered_df['supplier'].str.contains(params['supplier'], case=False)]
-    
-    if params.get('rental_period'):
-        filtered_df = filtered_df[filtered_df['rental_period'] == params['rental_period']]
-        
-    if params.get('car_group'):
-        filtered_df = filtered_df[filtered_df['car_group'] == params['car_group']]
-        
-    if params.get('date_range'):
-        start_date = datetime.now() - timedelta(days=params['date_range'])
-        filtered_df = filtered_df[filtered_df['date'] >= start_date]
-        
-    return filtered_df
+        return create_general_visualization(df, params)
 
 def create_trend_visualization(df, params):
     """Create a trend visualization"""
