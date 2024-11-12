@@ -6,9 +6,11 @@ from datetime import datetime
 def display_data_availability(df, search_type=None, search_params=None):
     title = "Data Availability"
     if search_type and search_params:
-        if search_type == "Scheduled":
+        if search_type == "Market Analysis":
+            title += f" for Market Analysis (From: {search_params['start_date']}, To: {search_params['end_date']})"
+        elif search_type == "Scheduled":
             title += f" for Scheduled Search (Date: {search_params['date']}, Time: {search_params['time']})"
-        else:
+        elif search_type == "Custom":
             title += f" for Custom Search (Pickup: {search_params['pickup']}, Dropoff: {search_params['dropoff']})"
     
     st.subheader(title)
@@ -75,8 +77,9 @@ def apply_filters(df, rental_period, selected_car_group, selected_source):
         
     filtered_df = st.session_state.original_df.copy()
 
+    # Ensure rental_period is treated as a string for comparison
     if rental_period != "All":
-        filtered_df = filtered_df[filtered_df["rental_period"] == int(rental_period)]
+        filtered_df = filtered_df[filtered_df["rental_period"].astype(str) == str(rental_period)]
 
     if selected_car_group != "All":
         filtered_df = filtered_df[filtered_df["car_group"] == selected_car_group]
