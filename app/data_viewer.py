@@ -76,7 +76,6 @@ def load_data(search_datetime, pickup_datetime, dropoff_datetime, is_custom_sear
             )
 
             api_url = f"/items/?table_name={site_name}&pickup_datetime={formatted_pickup}:00&dropoff_datetime={formatted_dropoff}:00&limit=10000"
-            print(f"Debug - Custom Search API URL: {api_url}")
             json_data = api_utils.get_request(api_url)
 
             if json_data:

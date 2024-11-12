@@ -68,4 +68,3 @@ sqs_handler = SQSHandler()
 queue_url = "greenmotion-lambda-queue"
 sqs_handler.delete_all_sqs_messages(queue_url)
 messages = sqs_handler.get_all_sqs_messages(queue_url)
-print(messages)
