@@ -11,5 +11,4 @@ def get_request(api_url):
         response.raise_for_status()
         return response.json()
     except Exception as e:
-        print(f"Error: {e}")
         raise e

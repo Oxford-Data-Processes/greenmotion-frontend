@@ -216,10 +216,6 @@ def get_recent_searches():
     logs_handler = logs.LogsHandler()
     log_messages = logs_handler.get_logs(bucket_name, "frontend")
 
-    print("LOG MESSAGES")
-    print(type(log_messages))
-    print(log_messages)
-
     # Filter for completed custom searches
     custom_searches = []
     for log in log_messages:
