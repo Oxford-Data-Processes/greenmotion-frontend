@@ -214,7 +214,11 @@ def get_recent_searches():
     project = "greenmotion"
     bucket_name = f"{project}-bucket-{os.environ['AWS_ACCOUNT_ID']}"
     logs_handler = logs.LogsHandler()
-    log_messages = logs_handler.get_logs(bucket_name, "frontend")[0]
+    log_messages = logs_handler.get_logs(bucket_name, "frontend")
+
+    print("LOG MESSAGES")
+    print(type(log_messages))
+    print(log_messages)
 
     # Filter for completed custom searches
     custom_searches = []

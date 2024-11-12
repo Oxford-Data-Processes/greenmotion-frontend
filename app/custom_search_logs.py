@@ -5,7 +5,7 @@ import os
 
 
 def load_logs(logs_handler, bucket_name):
-    log_messages = logs_handler.get_logs(bucket_name, "frontend")[0]
+    log_messages = logs_handler.get_logs(bucket_name, "frontend")
     log_df = pd.DataFrame(log_messages).sort_values(by="timestamp", ascending=False)
     st.dataframe(log_df, use_container_width=True)
 
