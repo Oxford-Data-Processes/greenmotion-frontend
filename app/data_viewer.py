@@ -157,7 +157,6 @@ def load_data_and_display(
 
 
 def handle_scheduled_search():
-    iam.get_aws_credentials(st.secrets["aws_credentials"])
     if "selected_date" not in st.session_state:
         st.session_state.selected_date = datetime.now().date()
 
@@ -241,7 +240,6 @@ def get_recent_searches():
 
 
 def handle_custom_search():
-    iam.get_aws_credentials(st.secrets["aws_credentials"])
     recent_searches = get_recent_searches()
     if not recent_searches:
         st.warning("No previous searches found")
@@ -276,6 +274,7 @@ def handle_custom_search():
 
 
 def main():
+    iam.get_aws_credentials(st.secrets["aws_credentials"])
 
     st.title("Data Viewer")
 
