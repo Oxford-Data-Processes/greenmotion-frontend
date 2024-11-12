@@ -117,8 +117,8 @@ def select_date_range():
         return None, None
 
     # Format datetimes for API
-    pickup_datetime = f"{pickup_date}T{pickup_time}"
-    dropoff_datetime = f"{dropoff_date}T{dropoff_time}"
+    pickup_datetime = f"{pickup_date}T{pickup_time}:00"
+    dropoff_datetime = f"{dropoff_date}T{dropoff_time}:00"
 
     return pickup_datetime, dropoff_datetime
 
@@ -150,6 +150,9 @@ def trigger_workflow(location, site_name, pickup_datetime, dropoff_datetime):
         "PICKUP_DATETIME": pickup_datetime,
         "DROPOFF_DATETIME": dropoff_datetime,
     }
+
+    print("INPUTS")
+    print(inputs)
 
     response = trigger_github_actions(
         repository_name, workflow, branch_name, inputs, token
